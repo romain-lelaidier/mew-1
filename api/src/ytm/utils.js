@@ -1,8 +1,9 @@
-const fs = require('fs');
-const axios = require('axios');
-const getColors = require('get-image-colors')
+import fs from "fs";
+import axios from "axios";
+import { extractColors } from "extract-colors"
+import getPixels from "get-pixels";
 
-function parseQueryString(qs) {
+export function parseQueryString(qs) {
   var params = new URLSearchParams(qs);
   var object = {};
   for (var [key, value] of params.entries()) {
@@ -11,7 +12,7 @@ function parseQueryString(qs) {
   return object;
 }
 
-function replaceUrlParam(url, paramName, paramValue) {
+export function replaceUrlParam(url, paramName, paramValue) {
   if (paramValue == null) {
     paramValue = '';
   }
@@ -23,7 +24,7 @@ function replaceUrlParam(url, paramName, paramValue) {
   return url + (url.indexOf('?')>0 ? '&' : '?') + paramName + '=' + paramValue;
 }
 
-function extractBracketsCode(beginIndex, jsCode) {
+export function extractBracketsCode(beginIndex, jsCode) {
   let index = beginIndex;
   let depth = 1;
   let stringIn = null;
@@ -60,15 +61,9 @@ function extractBracketsCode(beginIndex, jsCode) {
   return jsCode.substring(beginIndex, endIndex);
 }
 
-function isIterable(obj) {
-  // checks for null and undefined
-  if (obj == null) {
-  return false;
-  }
-  return typeof obj[Symbol.iterator] === 'function';
-}
+export const isIterable = object => object != null && typeof object[Symbol.iterator] === 'function';
 
-async function downloadFile(fileUrl, outputLocationPath, headers = {}, onProgress = () => {}) {
+export async function downloadFile(fileUrl, outputLocationPath, headers = {}, onProgress = () => {}) {
   var writer = fs.createWriteStream(outputLocationPath);
   var response = await axios({
     method: 'get',
@@ -100,19 +95,19 @@ async function downloadFile(fileUrl, outputLocationPath, headers = {}, onProgres
 }
 
 
-function durationToString(d) {
+export function durationToString(d) {
   const pad = (i, w, s) => (s.length < i) ? pad(i, w, w + s) : s;
   return Math.floor(d / 60) + ':' + pad(2, '0', (d%60).toString())
 }
 
-function viewsToString(v) {
+export function viewsToString(v) {
   if (Math.floor(v/1e9) > 0) return `${Math.floor(v/1e8)/10}Mds`
   if (Math.floor(v/1e6) > 0) return `${Math.floor(v/1e5)/10}M`
   if (Math.floor(v/1e3) > 0) return `${Math.floor(v/1e2)/10}k`
   return v.toString()
 }
 
-function parseViewCount(str) {
+export function parseViewCount(str) {
   var viewsMatch = str.match(/(\d+,\d+|\d+)( (k|M))?/);
   const multiplier = {
     undefined: 1,
@@ -122,7 +117,7 @@ function parseViewCount(str) {
   return parseFloat(viewsMatch[1].replaceAll(',', '.')) * multiplier[viewsMatch[3]]
 }
 
-function chooseFormat(formats) {
+export function chooseFormat(formats) {
   var audioSorted = formats
     .filter(fmt => fmt.mimeType.includes("audio/webm"))
     .sort((fmt1, fmt2) => fmt2.bitrate - fmt1.bitrate)
@@ -130,7 +125,7 @@ function chooseFormat(formats) {
   return formats[1];
 }
 
-function chooseThumbnail(thumbnails, width=Infinity) {
+export function chooseThumbnail(thumbnails, width=Infinity) {
   if (!isIterable(thumbnails)) return {}
   var sorted = thumbnails
     .sort((thb1, thb2) => thb2.width - thb1.width);
@@ -139,14 +134,14 @@ function chooseThumbnail(thumbnails, width=Infinity) {
   return sorted[sorted.length - 1];
 }
 
-function formatBytes(a,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}
+export function formatBytes(a,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}
 
-function fillstr(str, length, c = ' ') {
+export function fillstr(str, length, c = ' ') {
   if (str.length < length) return fillstr(str + c, length, c);
   return str;
 }
 
-class WebWrapper {
+export class WebWrapper {
   // simplifies methods for scraping from web / save (for debug mode)
 
   path(name, type) {
@@ -201,53 +196,21 @@ class WebWrapper {
   post(name, type, url, data, options={}) {
     return this.request('POST', name, type, url, data, options);
   }
-
-  thumbnail(id, url, forceDownload) {
-    return new Promise((resolve, reject) => {
-      var path = `./tmp/pal_${id}.jpg`;
-
-      if (!forceDownload && fs.existsSync(path)) {
-        return resolve(path);
-      }
-
-      console.log("  GET thumbnailColor", id);
-
-      axios.get(
-        url,
-        { responseType: "stream" }
-      )
-      .then(res => {
-        var wstream = fs.createWriteStream(path);
-        res.data.pipe(wstream, { end: true });
-        wstream.on('close', () => {
-          resolve(path);
-        })
-      })
-      .catch(reject);
-    })
-  }
 }
 
-function colorPalette(path) {
+export function downloadColorPalette(url) {
   return new Promise((resolve, reject) => {
-    getColors(path).then(colors => {
-      resolve(colors.map(c => { return { r: c._rgb[0], g: c._rgb[1], b: c._rgb[2] } }));
-    }).catch(reject);
+    getPixels(url, (err, pixels) => {
+      if (err) return reject(err);
+      extractColors(pixels)
+      .then(colors => {
+        resolve(colors.slice(0,3).map(color => {
+          return { r: color.red, g: color.green, b: color.blue }
+        }));
+      })
+      .catch(reject);
+    });
   })
 }
 
-module.exports = {
-  parseQueryString,
-  replaceUrlParam,
-  extractBracketsCode,
-  isIterable,
-  downloadFile,
-  durationToString,
-  viewsToString,
-  chooseFormat,
-  chooseThumbnail,
-  mds: ' · ',
-  WebWrapper,
-  colorPalette,
-  parseViewCount
-}
+export const mds = ' · ';
