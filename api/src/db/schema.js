@@ -1,4 +1,4 @@
-import { mysqlTable, primaryKey, int, varchar } from "drizzle-orm/mysql-core"
+import { mysqlTable, primaryKey, int, varchar, datetime } from "drizzle-orm/mysql-core"
 
 export const players = mysqlTable(
   'players',
@@ -19,5 +19,18 @@ export const palettes = mysqlTable(
   {
     id: varchar({ length: 17 }).notNull().primaryKey(),
     p: varchar({ length: 256 }).notNull()
+  }
+);
+
+export const logs = mysqlTable(
+  'logs',
+  {
+    id: int().primaryKey().autoincrement(),
+    date: datetime(),
+    ip: varchar({ length: 16 }),
+    type: varchar({ length: 4 }),
+    vid: varchar({ length: 11 }),
+    name: varchar({ length: 128 }),
+    subname: varchar({ length: 128 })
   }
 );
