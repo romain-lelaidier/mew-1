@@ -1,19 +1,12 @@
 {
   "name": "mew",
   "version": "0.0.0",
-  "type": "module",
-  "devDependencies": {
-    "vite": "^6.3.5",
-    "vite-plugin-solid": "^2.11.7"
-  },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build"
-  },
-  "dependencies": {
-    "@solidjs/router": "^0.15.3",
-    "@tailwindcss/vite": "^4.1.11",
-    "solid-js": "^1.9.7",
-    "tailwindcss": "^4.1.11"
+    "start:web": "cd web && npm start",
+    "start:api": "cd api && npm start",
+    "dev": "concurrently \"npm run start:web\" \"npm run start:api\"",
+    "build:web": "cd web && npm run build",
+    "build:api": "cd api && npm run build",
+    "build": "npm run build:web && npm run build:api"
   }
 }
