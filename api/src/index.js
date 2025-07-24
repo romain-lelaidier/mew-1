@@ -4,12 +4,13 @@ import mysql from "mysql2/promise";
 import * as schema from "./db/schema.js";
 import * as utils from "./ytm/utils.js"
 import YTM from "./ytm/ytm.js";
+import * as fs from "fs";
 
 // ----- database connection -----
 const connection = await mysql.createConnection({
   host: process.env.DB_MYSQL_HOST,
   user: process.env.DB_MYSQL_USER,
-  database: process.env.BD_MYSQL_DATABASE,
+  database: process.env.DB_MYSQL_DATABASE,
   password: process.env.DB_MYSQL_PASSWORD
 })
 
@@ -36,6 +37,12 @@ async function log(origin, req, { vid='', name='', subname='' }) {
   }
 }
 
+// ----- debugger -----
+const d = process.env.MEW_DEBUG ? true : false;
+if (d && !fs.existsSync("./debug")) {
+  fs.mkdirSync("./debug");
+}
+
 // ----- web server -----
 const app = express();
 
@@ -45,8 +52,11 @@ app.get('/api/search_suggestions/:query', async (req, res) => {
 })
 
 app.get('/api/search/:query', async (req, res) => {
-  const results = await ytm.getSearch(req.params.query);
+  const results = d && fs.existsSync("./debug/search.json")
+    ? JSON.parse(fs.readFileSync("./debug/search.json"))
+    : await ytm.getSearch(req.params.query);
   log('search', req, { name: req.params.query });
+  if (d) fs.writeFileSync("./debug/search.json", JSON.stringify(results));
   res.json(results);
 });
 

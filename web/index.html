@@ -9,14 +9,23 @@
     <style>
       @import "tailwindcss";
       @theme {
-        --color-d: oklch(0.72 0.11 178);
+        --color-d: oklch(78.5% 0.115 274.713);
         --color-b: rgb(0, 0, 0);
+      }
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+          display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
       }
     </style>
   </head>
   <body class="bg-d font-[Cabin]">
     <div class="flex flex-col min-h-screen justify-between">
-      <div id="app" class="px-2 sm:px-8 md:px-16 lg:px-32 py-4 min-h-full flex-grow flex flex-col justify-center"></div>
+      <div id="app" class="px-2 sm:px-8 md:px-16 lg:px-32 py-4 min-h-full flex-grow flex flex-col"></div>
       <footer class="footer sm:footer-horizontal bg-b text-d flex justify-center flex-wrap [&>*]:px-4 [&>*]:py-0.5">
         <a href="/web">Home</a>
         <a href="https://github.com/romain-lelaidier/mew-1" target="_blank">GitHub</a>
@@ -26,5 +35,10 @@
       </footer>
     </div>
     <script src="./main.jsx" type="module"></script>
+    <script>
+      window.addEventListener("popstate", function(e) {
+        window.location.href = location.href;
+      });
+    </script>
   </body>
 </html>
