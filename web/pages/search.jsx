@@ -4,6 +4,7 @@ import { createResource, createSignal, onMount, Show, Switch } from 'solid-js';
 import SearchBar from "../components/searchbar";
 import { SearchResultsAll } from '../components/results';
 import { MetaProvider, Title } from "@solidjs/meta";
+import { BackButton } from "../components/backbutton";
 
 async function fetchResults(query) {
   if (query.length < 3) return;
@@ -24,6 +25,8 @@ export default function App() {
       <MetaProvider>
         <Title>Mew - {query()}</Title>
       </MetaProvider>
+
+      <BackButton />
 
       <SearchBar onsubmit={setQuery} query={originQuery} />
 

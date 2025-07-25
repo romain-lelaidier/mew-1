@@ -8,50 +8,7 @@ import { QueueResults } from '../components/results';
 import { chooseThumbnailUrl, durationString, url } from "../components/utils";
 import { createStore } from "solid-js/store";
 import ColorThief from "colorthief";
-
-// class Thumbnail {
-//   constructor(img, thumbnails, crossOrigin=false, width=Infinity) {
-//     this.img = img;
-//     this.thumbnails = thumbnails;
-//     this.width = width;
-//     this.crossOrigin = crossOrigin;
-
-//     this.img.classList.add("thumbnail")
-
-//     this.load();
-//   }
-
-//   choose(retry = false) {
-//     var w = retry ? 120 : this.width;
-//     var sorted = this.thumbnails.sort((thb1, thb2) => thb2.width - thb1.width);
-//     var filtered = sorted.filter(thb => thb.width <= w)
-//     if (filtered.length > 0) return filtered[0];
-//     return sorted[sorted.length - 1];
-//   }
-
-//   loadFromThumbnail(thb) {
-//     var url = this.crossOrigin
-//         ? `/web/img?url=${encodeURI(thb.url)}`
-//         : thb.url;
-//     this.img.src = url;
-//     this.img.height = thb.height;
-//     this.img.width = thb.width;
-//   }
-
-//   load() {
-//     var thb = this.choose();
-//     this.loadFromThumbnail(thb);
-
-//     var retried = false;
-//     this.img.addEventListener("error", () => {
-//       if (!retried) {
-//         console.log("retrying")
-//         this.loadFromThumbnail(this.choose(true))
-//         retried = true;
-//       }
-//     })
-//   }
-// }
+import { BackButton } from "../components/backbutton";
 
 class Player {
 
@@ -71,7 +28,8 @@ class Player {
     [ this.stream, this.setStream ] = createSignal(null);
     [ this.playing, this.setPlaying ] = createSignal(false);
     [ this.audio, this.controls ] = createAudio(this.stream, this.playing);
-  
+    [ this.requestAutoplay, this.setRequestAutoplay ] = createSignal(false);
+
     [ this.canSkip, this.setCanSkip ] = createSignal(true);
 
     this.restart(id, params);
@@ -113,7 +71,24 @@ class Player {
         this.setCanSkip(true);
       }
       if (this.audio.state == 'error') {
-        alert('error')
+        const code = this.audio.player.networkState;
+        if (code = 1) {
+          // succesfully loaded : autoplay is probably prevented
+          // this.pautoplay.classList.add("on");
+          this.setPlaying(false);
+          this.setRequestAutoplay(true);
+          var clicked = false;
+          window.addEventListener("click", () => {
+            if (!clicked) {
+              this.setRequestAutoplay(false);
+              this.setPlaying(true);
+            }
+            clicked = true;
+          })
+          return;
+        }
+        this.actions.next();
+        console.log('audio error: networkState = ' + code);
       }
     })
 
@@ -274,8 +249,7 @@ class Player {
 
   tryPlay() {
     if (this.stream() != this.s.current.stream) {
-      console.log('stream change')
-      this.setStream(this.s.current.stream.url);
+      this.setStream('' + this.s.current.stream.url);
       this.setPlaying(true);
     }
   }
@@ -306,6 +280,20 @@ export default function App() {
       <MetaProvider>
         <Title>Mew - {player.s.current ? player.s.current.title : 'Loading...'}</Title>
       </MetaProvider>
+
+      <div class="hidden ls:block">
+        <BackButton />
+      </div>
+
+      <Show when={player.requestAutoplay()}>
+        <div class="absolute z-2 bg-d/90 w-full h-full flex items-center justify-center">
+          <div class="flex flex-col p-4 items-center [&>*]:text-center">
+            <span class="text-red-700 font-bold">Audio autoplay is blocked.</span>
+            <span>Please interact with the page to play the audio, and ideally disable autoplay restrictions.</span>
+            <span class="italic">Click anywhere to continue.</span>
+          </div>
+        </div>
+      </Show>
 
       {/* Current song details */}
       <div class="flex-1 flex m-2 items-center justify-center">
@@ -379,7 +367,7 @@ export default function App() {
       </div>
 
       {/* Queue */}
-      <div style="min-width:60vw" class="bg-d flex flex-row flex-1 w-full justify-center ls:max-h-full ls:overflow-y-scroll">
+      <div style="min-width:50vw" class="bg-d flex flex-row flex-1 w-full justify-center ls:max-h-full ls:overflow-y-scroll">
         <div class="flex flex-col gap-2 py-4 px-4 w-130 max-h-full overflow-y-scroll">
           <SearchBar navigator={navigate} />
           <h3 class="text-xl font-bold">Queue</h3>

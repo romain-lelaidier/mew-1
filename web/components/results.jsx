@@ -70,6 +70,11 @@ export function SearchResultsAll(props) {
 
 export function SearchResultsArtist(props) {
   const artist = props.artist;
+  var description = artist.description;
+  if (description) {
+    let i = description.indexOf('(\n');
+    if (i != 0) description = description.substring(0, i);
+  }
   return (
     <>
       <div style={{'--bg-url': `url(${chooseThumbnailUrl(artist.thumbnails)})`}} class="bg-b/10 bg-(image:--bg-urhl) rounded-md flex flex-row mt-1">
@@ -102,8 +107,8 @@ export function SearchResultsArtist(props) {
         </div>
       </div>
       <SearchResultsAll results={artist.results} />
-      <Show when={artist.description}>
-        <For each={artist.description.split('\n')}>{(p, i) =>
+      <Show when={description}>
+        <For each={description.split('\n')}>{(p, i) =>
           <p>{p}</p>
         }</For>
       </Show>

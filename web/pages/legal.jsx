@@ -1,6 +1,10 @@
+import { BackButton } from "../components/backbutton";
+
 export default function App() {
   return (
     <div class="bg-d flex flex-col flex-grow gap-4 py-4 px-4 sm:mx-16 md:mx-32 lg:mx-48 xl:mx-64 2xl:mx-80 [&_h3]:text-2xl [&_h5]:font-bold [&_h5]:mt-2">
+      <BackButton />
+
       <div>
         <h3>Terms of Service</h3>
         Effective Date: June 16, 2025<br/>

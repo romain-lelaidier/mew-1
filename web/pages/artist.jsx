@@ -4,6 +4,7 @@ import { createResource, createSignal, onMount, Show, Switch } from 'solid-js';
 import SearchBar from "../components/searchbar";
 import { SearchResultsArtist } from '../components/results';
 import { MetaProvider, Title } from "@solidjs/meta";
+import { BackButton } from "../components/backbutton";
 
 async function fetchArtist(id) {
   // if (!!id.match(/^[a-zA-Z0-9_-]{24}$/)) return;
@@ -25,6 +26,8 @@ export default function App() {
       <MetaProvider>
         <Title>Mew - {artist()?.title || 'Loading...'}</Title>
       </MetaProvider>
+
+      <BackButton />
 
       <SearchBar navigator={navigate} />
 
