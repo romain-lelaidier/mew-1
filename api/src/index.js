@@ -39,8 +39,26 @@ async function log(origin, req, { vid='', name='', subname='' }) {
 
 // ----- debugger -----
 const d = process.env.MEW_DEBUG ? true : false;
+if (d) console.log('DEBUG mode');
+
 if (d && !fs.existsSync("./debug")) {
   fs.mkdirSync("./debug");
+}
+
+// debug middleware
+function dmw(req, res, next) {
+  const regex = /[^a-zA-Z0-9]/gi;
+  const fpath = './debug/' + decodeURIComponent(req.originalUrl).replaceAll(regex, '_') + '.json'
+  if (d && fs.existsSync(fpath)) {
+    res.json(JSON.parse(fs.readFileSync(fpath)))
+  } else {
+    const originalSend = res.send;
+    res.send = function(body) {
+      if (d) fs.writeFileSync(fpath, body);
+      originalSend.call(this, body);
+    };
+    next();
+  }
 }
 
 // ----- web server -----
@@ -51,27 +69,26 @@ app.get('/api/search_suggestions/:query', async (req, res) => {
   res.json(results);
 })
 
-app.get('/api/search/:query', async (req, res) => {
-  const results = d && fs.existsSync("./debug/search.json")
-    ? JSON.parse(fs.readFileSync("./debug/search.json"))
-    : await ytm.getSearch(req.params.query);
+app.get('/api/search/:query', dmw, async (req, res) => {
+  const results = await ytm.getSearch(req.params.query);
   log('search', req, { name: req.params.query });
-  if (d) fs.writeFileSync("./debug/search.json", JSON.stringify(results));
   res.json(results);
 });
 
-app.get('/api/artist/:id', async (req, res) => {
+app.get('/api/artist/:id', dmw, async (req, res) => {
   const artist = await ytm.getArtist(req.params.id);
   res.json(artist);
 })
 
-app.get('/api/album/:id', async (req, res) => {
+app.get('/api/album/:id', dmw, async (req, res) => {
   const album = await ytm.getAlbum(req.params.id);
   res.json(album);
 })
 
-app.get('/api/video/:id', async (req, res) => {
+app.get('/api/video/:id', dmw, async (req, res) => {
   const obj = { id: req.params.id };
+  var params = utils.parseQueryString(req._parsedUrl.query);
+  if (params.qid) obj.queueId = params.qid;
   const video = await ytm.getVideo(obj);
   log('song', req, { vid: req.params.id, name: video.video.title, subname: video.video.artist });
   res.json(video);
