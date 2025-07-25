@@ -1,9 +1,116 @@
+import { A } from "@solidjs/router";
 import { For, Match, Switch } from "solid-js";
+import { url, chooseThumbnailUrl, durationString, viewCountString } from "./utils.jsx"
 
 export const mds = ' · ';
 
+export function QueueResults(props) {
+  return (
+    <div class="flex flex-col leading-[1.2] max-h-full overflow-y-scroll">
+      <For each={props.queue}>{(result, j) =>
+        <div onClick={() => props.onClick(j())} class="flex flex-row gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+          <Show when={props.i == j()}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="w-6 h-6 mx-2">
+              <path d="M532 71C539.6 77.1 544 86.3 544 96L544 400C544 444.2 501 480 448 480C395 480 352 444.2 352 400C352 355.8 395 320 448 320C459.2 320 470 321.6 480 324.6L480 207.9L256 257.7L256 464C256 508.2 213 544 160 544C107 544 64 508.2 64 464C64 419.8 107 384 160 384C171.2 384 182 385.6 192 388.6L192 160C192 145 202.4 132 217.1 128.8L505.1 64.8C514.6 62.7 524.5 65 532.1 71.1z"/>
+            </svg>
+          </Show>
+          <Show when={!props.album}
+            fallback=<div class="flex flex-row">
+              <div class="w-8 h-8 flex justify-center items-center">
+                <span>{result.index}.</span>
+              </div>
+              <div class="flex flex-col justify-center">
+                <span class="font-bold py-1">{result.title}</span>
+              </div>
+            </div>
+          >
+            <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 100)} />
+            <div>
+              <span class="font-bold">{result.title}</span>
+              <AggregateSpans strs={[
+                [result.artist],
+                [result.album, "italic"]
+              ]} sep={mds} bf={<br/>} />
+              <AggregateSpans strs={[
+                [durationString(result.duration)]
+              ]} sep={mds} bf={<br/>} />
+            </div>
+          </Show>
+        </div>
+      }</For>
+    </div>
+  )
+}
+
+export function SearchResultsAll(props) {
+  const songs = [];
+  const others = [];
+  const top = [];
+  for (const result of props.results) {
+    if (result.top == true) {
+      top.push(result);
+    } else if (result.type == 'VIDEO' || result.type == 'SONG') {
+      songs.push(result);
+    } else {
+      others.push(result);
+    }
+  }
+
+  return (
+    <>
+      <Show when={top.length > 0}>
+        <SearchResultTop result={top[0]} />
+      </Show>
+      <SearchResults results={songs} />
+      <SearchResults results={others} />
+    </>
+  )
+}
+
+export function SearchResultsArtist(props) {
+  const artist = props.artist;
+  return (
+    <>
+      <div style={{'--bg-url': `url(${chooseThumbnailUrl(artist.thumbnails)})`}} class="bg-b/10 bg-(image:--bg-urhl) rounded-md flex flex-row mt-1">
+        <img src={chooseThumbnailUrl(artist.thumbnails)} class="h-28 rounded-l-md" />
+        <div class="p-2 flex flex-col gap-1 justify-center">
+          <div class="text-2xl">{artist.title}</div>
+          <Show when={artist.viewCount}>
+            <div>{viewCountString(artist.viewCount)} monthly listeners</div>
+          </Show>
+          <Show when={artist.shufflePlayPID || artist.radioPlayPID}>
+            <div class="flex flex-row gap-2 items-center">
+              <Show when={artist.shufflePlayPID}>
+                <A href={`/player/${artist.shufflePlaySID}?qid=${artist.shufflePlayPID}`} class="bg-b py-1 px-3 rounded-md text-white flex flex-row items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 640 640" class="w-4 h-4">
+                    <path d="M467.8 98.4C479.8 93.4 493.5 96.2 502.7 105.3L566.7 169.3C572.7 175.3 576.1 183.4 576.1 191.9C576.1 200.4 572.7 208.5 566.7 214.5L502.7 278.5C493.5 287.7 479.8 290.4 467.8 285.4C455.8 280.4 448 268.9 448 256L448 224L416 224C405.9 224 396.4 228.7 390.4 236.8L358 280L318 226.7L339.2 198.4C357.3 174.2 385.8 160 416 160L448 160L448 128C448 115.1 455.8 103.4 467.8 98.4zM218 360L258 413.3L236.8 441.6C218.7 465.8 190.2 480 160 480L96 480C78.3 480 64 465.7 64 448C64 430.3 78.3 416 96 416L160 416C170.1 416 179.6 411.3 185.6 403.2L218 360zM502.6 534.6C493.4 543.8 479.7 546.5 467.7 541.5C455.7 536.5 448 524.9 448 512L448 480L416 480C385.8 480 357.3 465.8 339.2 441.6L185.6 236.8C179.6 228.7 170.1 224 160 224L96 224C78.3 224 64 209.7 64 192C64 174.3 78.3 160 96 160L160 160C190.2 160 218.7 174.2 236.8 198.4L390.4 403.2C396.4 411.3 405.9 416 416 416L448 416L448 384C448 371.1 455.8 359.4 467.8 354.4C479.8 349.4 493.5 352.2 502.7 361.3L566.7 425.3C572.7 431.3 576.1 439.4 576.1 447.9C576.1 456.4 572.7 464.5 566.7 470.5L502.7 534.5z"/>
+                  </svg>
+                  Shuffle
+                </A>
+              </Show>
+              <Show when={artist.radioPlayPID}>
+                <A href={`/player/${artist.radioPlaySID}?qid=${artist.radioPlayPID}`} class="bg-b py-1 px-3 rounded-md text-white flex flex-row items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 640 640" class="w-4 h-4">
+                    <path d="M558.8 79C571.5 75.3 578.8 61.9 575.1 49.2C571.4 36.5 558 29.2 545.3 33L115.8 158.9C106.4 161.6 97.9 166.1 90.6 172C74.5 183.7 64 202.6 64 224L64 480C64 515.3 92.7 544 128 544L512 544C547.3 544 576 515.3 576 480L576 224C576 188.7 547.3 160 512 160L282.5 160L558.8 79zM432 272C476.2 272 512 307.8 512 352C512 396.2 476.2 432 432 432C387.8 432 352 396.2 352 352C352 307.8 387.8 272 432 272zM128 312C128 298.7 138.7 288 152 288L264 288C277.3 288 288 298.7 288 312C288 325.3 277.3 336 264 336L152 336C138.7 336 128 325.3 128 312zM128 408C128 394.7 138.7 384 152 384L264 384C277.3 384 288 394.7 288 408C288 421.3 277.3 432 264 432L152 432C138.7 432 128 421.3 128 408z"/>
+                  </svg>
+                  Radio
+                </A>
+              </Show>
+            </div>
+          </Show>
+        </div>
+      </div>
+      <SearchResultsAll results={artist.results} />
+      <Show when={artist.description}>
+        <For each={artist.description.split('\n')}>{(p, i) =>
+          <p>{p}</p>
+        }</For>
+      </Show>
+    </>
+  )
+}
+
 export function SearchResults(props) {
-  console.log(props.results.length)
   if (props.results.length == 0) return (
     <div>
       No results.
@@ -39,17 +146,48 @@ export function SearchResults(props) {
   );
 }
 
+export function SearchResultTop(props) {
+  const result = props.result;
+  if (result.type == 'VIDEO' || result.type == 'SONG') {
+    return (
+      <A href={url(result)} class="flex flex-row gap-2 hover:bg-white/10 p-1 rounded-sm items-center leading-[1.2] text-lg">
+        <img loading="lazy" class="h-24 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 200)} />
+        <div>
+          <span class="font-bold">{result.title}</span>
+          <AggregateSpans strs={[
+            [result.artist],
+            [result.album, "italic"]
+          ]} sep={mds} bf={<br/>} />
+          <AggregateSpans strs={[
+            [durationString(result.duration)]
+          ]} sep={mds} bf={<br/>} />
+        </div>
+      </A>
+    )
+  }
+  if (result.type == 'ARTIST') {
+    return (
+      <A href={url(result)} class="shrink-0 flex flex-row gap-2 text-lg hover:bg-white/10 p-1 rounded-sm items-center">
+        <img loading="lazy" class="h-30 rounded-full" src={chooseThumbnailUrl(result.thumbnails, 160)} />
+        <div class="flex flex-col gap-1 items-center">
+          <AggregateSpans strs={[
+            [result.title, "text-2xl"]
+          ]} sep={''} />
+        </div>
+      </A>
+    )
+  }
+}
+
 function SearchResultGroup(props) {
   const group = props.group;
-  console.log(group)
-
   if (group.type == 'VIDEO' || group.type == 'SONG') {
     return (
       <div class="flex flex-col gap-1">
         <h3 class="text-xl font-bold">Songs</h3>
         <div class="flex flex-col leading-[1.2]">
           <For each={group.results}>{(result, j) =>
-            <div class="flex flex-row gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+            <A href={url(result)} class="flex flex-row gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
               <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 100)} />
               <div>
                 <span class="font-bold">{result.title}</span>
@@ -61,7 +199,7 @@ function SearchResultGroup(props) {
                   [durationString(result.duration)]
                 ]} sep={mds} bf={<br/>} />
               </div>
-            </div>
+            </A>
           }</For>
         </div>
       </div>
@@ -72,10 +210,10 @@ function SearchResultGroup(props) {
     return (
       <div class="flex flex-col gap-1">
         <h3 class="text-xl font-bold">Albums</h3>
-        <div class="flex flex-row no-scrollbar leading-none overflow-scroll">
+        <div class="flex flex-row gap-2 no-scrollbar leading-none overflow-scroll">
           <For each={group.results}>{(result, j) =>
-            <div class="shrink-0 flex flex-col max-w-32 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
-              <img loading="lazy" class="h-30 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 120)} />
+            <A href={url(result)} class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+              <img loading="lazy" class="h-40 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 160)} />
               <div class="flex flex-col gap-1 items-center">
                 <AggregateSpans strs={[
                   [result.title, "font-bold text-center"],
@@ -83,7 +221,7 @@ function SearchResultGroup(props) {
                   [result.year, "opacity-80"]
                 ]} sep={''} />
               </div>
-            </div>
+            </A>
           }</For>
         </div>
       </div>
@@ -94,16 +232,16 @@ function SearchResultGroup(props) {
     return (
       <div class="flex flex-col gap-1">
         <h3 class="text-xl font-bold">Artists</h3>
-        <div class="flex flex-row no-scrollbar leading-none overflow-scroll">
+        <div class="flex flex-row gap-2 no-scrollbar leading-none overflow-scroll">
           <For each={group.results}>{(result, j) =>
-            <div class="shrink-0 flex flex-col max-w-32 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
-              <img loading="lazy" class="h-30 rounded-full" src={chooseThumbnailUrl(result.thumbnails, 120)} />
+            <A href={url(result)} class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+              <img loading="lazy" class="h-40 rounded-full" src={chooseThumbnailUrl(result.thumbnails, 160)} />
               <div class="flex flex-col gap-1 items-center">
                 <AggregateSpans strs={[
                   [result.title, "font-bold text-center"]
                 ]} sep={''} />
               </div>
-            </div>
+            </A>
           }</For>
         </div>
       </div>
@@ -114,10 +252,10 @@ function SearchResultGroup(props) {
     return (
       <div class="flex flex-col gap-1">
         <h3 class="text-xl font-bold">Playlists</h3>
-        <div class="flex flex-row no-scrollbar leading-none overflow-scroll">
+        <div class="flex flex-row gap-2 no-scrollbar leading-none overflow-scroll">
           <For each={group.results}>{(result, j) =>
-            <div class="shrink-0 flex flex-col max-w-32 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
-              <img loading="lazy" class="h-30 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 120)} />
+            <div class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+              <img loading="lazy" class="h-40 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 160)} />
               <div class="flex flex-col gap-1 items-center">
                 <AggregateSpans strs={[
                   [result.title, "font-bold text-center"],
@@ -137,12 +275,6 @@ function SearchResultGroup(props) {
   )
 }
 
-function durationString(duration) {
-  if (!duration) return null;
-  const pad = (i, w, s) => (s.length < i) ? pad(i, w, w + s) : s;
-  return Math.floor(duration / 60) + ':' + pad(2, '0', (duration%60).toString())
-}
-
 function AggregateSpans(props) {
   var strs = props.strs.filter(element => element != null && element[0] != null);
   if (strs.length == 0) return (<></>);
@@ -157,13 +289,4 @@ function AggregateSpans(props) {
       }</For>
     </>
   )
-}
-
-function chooseThumbnailUrl(thumbnails, width=Infinity) {
-  if (thumbnails.length == 0) return;
-  var sorted = thumbnails
-    .sort((thb1, thb2) => thb2.width - thb1.width);
-  var filtered = sorted.filter(thb => thb.width <= width)
-  if (filtered.length > 0) return filtered[0].url;
-  return sorted[sorted.length - 1].url;
 }

@@ -7,6 +7,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@solid-primitives/audio": "^1.4.2",
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.3",
     "@tailwindcss/vite": "^4.1.11",

@@ -11,6 +11,7 @@
       @theme {
         --color-d: oklch(78.5% 0.115 274.713);
         --color-b: rgb(0, 0, 0);
+        --breakpoint-ls: 50rem;
       }
       /* Hide scrollbar for Chrome, Safari and Opera */
       .no-scrollbar::-webkit-scrollbar {
@@ -21,17 +22,59 @@
           -ms-overflow-style: none;  /* IE and Edge */
           scrollbar-width: none;  /* Firefox */
       }
+
+      /* Slider */
+      #pslider {
+        -webkit-appearance: none;
+        appearance: none; 
+        width: 100%;
+        cursor: pointer;
+        outline: none;
+      }
+      #pslider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 0.5rem;
+        width:  0.5rem;
+        background-color: var(--color-b);
+        border-radius: 50%;
+        border: none;
+        transition: .2s ease-in-out;
+      }
+      #pslider::-moz-range-thumb {
+        height: 0.5rem;
+        width:  0.5rem;
+        background-color: var(--color-b);
+        border-radius: 50%;
+        border: none;
+        transition: .2s ease-in-out;
+      }
+      #pslider:hover::-webkit-slider-thumb:hover {
+        height: 0.8rem;
+        width:  0.8rem;
+      }
+      #pslider:active::-webkit-slider-thumb {
+        box-shadow: 0 0 0 0.6rem rgba(0,0,0,.2)
+      }
+
+      #pslider:hover::-moz-range-thumb {
+        height: 0.8rem;
+        width:  0.8rem;
+      }
+      #pslider:active::-moz-range-thumb {
+        box-shadow: 0 0 0 0.6rem rgba(0,0,0,.2)
+      }
     </style>
   </head>
-  <body class="bg-d font-[Cabin]">
-    <div class="flex flex-col min-h-screen justify-between">
-      <div id="app" class="px-2 sm:px-8 md:px-16 lg:px-32 py-4 min-h-full flex-grow flex flex-col"></div>
+  <body class="font-[Cabin] bg-d">
+    <div class="flex flex-col h-screen">
+      <div id="app" class="flex-grow flex flex-col overflow-y-scroll bg-d bg-[radial-gradient(#fffa_1px,transparent_1px)] [background-size:16px_16px] bg-fixed"></div>
       <footer class="footer sm:footer-horizontal bg-b text-d flex justify-center flex-wrap [&>*]:px-4 [&>*]:py-0.5">
-        <a href="/web">Home</a>
+        <a href="/">Home</a>
         <a href="https://github.com/romain-lelaidier/mew-1" target="_blank">GitHub</a>
         <span>MIT License · 2025</span>
         <a href="mailto:romain.lelaidier@etu.minesparis.psl.eu">Contact</a>
-        <a href="/web/legal">Legal</a>
+        <a href="/legal">Legal</a>
       </footer>
     </div>
     <script src="./main.jsx" type="module"></script>
