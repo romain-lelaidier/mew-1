@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from '@tailwindcss/vite';
+import dotenv from 'dotenv';
+
+const config = dotenv.config({ path: '../.env' }).parsed!;
+const port: number = parseInt(config.PORT_MEW_WEB!);
 
 export default defineConfig({
   plugins: [
@@ -8,7 +12,7 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
-    port: 2999,
+    port,
     proxy: {
       '/api': {
         target: 'http://localhost:2998',
@@ -27,5 +31,8 @@ export default defineConfig({
         },
       }
     }
+  },
+  preview: {
+    port
   }
 });
