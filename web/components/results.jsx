@@ -15,12 +15,13 @@ export function QueueResults(props) {
             </svg>
           </Show>
           <Show when={!props.album}
-            fallback=<div class="flex flex-row">
+            fallback=<div class="flex flex-row items-center">
               <div class="w-8 h-8 flex justify-center items-center">
                 <span>{result.index}.</span>
               </div>
               <div class="flex flex-col justify-center">
-                <span class="font-bold py-1">{result.title}</span>
+                <span class="font-bold">{result.title}</span>
+                <Show when={result.duration}><span>{durationString(result.duration)}</span></Show>
               </div>
             </div>
           >

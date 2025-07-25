@@ -1,19 +1,13 @@
 import { useNavigate, useParams, useSearchParams, A } from "@solidjs/router";
 import { createAudio } from "@solid-primitives/audio";
-import { Show, createSignal, createEffect } from 'solid-js';
+import { Show, createSignal, createEffect, onMount } from 'solid-js';
 import { MetaProvider, Title } from "@solidjs/meta";
 
 import SearchBar from "../components/searchbar";
 import { QueueResults } from '../components/results';
 import { chooseThumbnailUrl, durationString, url } from "../components/utils";
 import { createStore } from "solid-js/store";
-
-// function getDominantColor(colorthief, img) {
-//     var c = colorthief.getColor(img);
-//     var nc = Math.sqrt(c.map(x => x*x).reduce((a,b)=>a+b,0))
-//     c = c.map(x => x*310/nc);
-//     return `rgb(${c.join(',')})`
-// }
+import ColorThief from "colorthief";
 
 // class Thumbnail {
 //   constructor(img, thumbnails, crossOrigin=false, width=Infinity) {
@@ -60,11 +54,85 @@ import { createStore } from "solid-js/store";
 // }
 
 class Player {
-  constructor(id, params) {
-    // this.colorthief = new ColorThief();
-    // this.root = document.querySelector(':root');
 
+  constructor(id, params) {
     [ this.s, this.setS ] = createStore({
+      get current() {
+        return this.queue[this.i]
+      },
+      get next() {
+        return this.queue[this.inext]
+      },
+      get url() {
+        return this.queue[this.i]?.stream?.url
+      },
+    });
+
+    [ this.stream, this.setStream ] = createSignal(null);
+    [ this.playing, this.setPlaying ] = createSignal(false);
+    [ this.audio, this.controls ] = createAudio(this.stream, this.playing);
+  
+    [ this.canSkip, this.setCanSkip ] = createSignal(true);
+
+    this.restart(id, params);
+
+    this.actions = {
+      playPause: () => {
+        this.setPlaying(playing => !playing);
+      },
+      next: (right = true) => {
+        this.controls.pause();
+        let delta = right ? 1 : -1;
+        let newi = this.s.i + delta;
+        if (newi < 0 || newi >= this.s.queue.length) return;
+        this.setS("i", newi);
+        this.setS("inext", newi + delta);
+        this.prepare().then(() => {
+          this.tryPlay()
+        });
+      },
+      jump: i => {
+        if (i < 0 || i >= this.s.queue.length) return;
+        this.controls.pause();
+        this.setS("i", i);
+        this.setS("inext", i + 1);
+        this.prepare().then(() => {
+          this.tryPlay()
+        });
+      }
+    }
+
+    createEffect(() => {
+      if (this.audio.state == 'complete' && this.canSkip()) {
+        console.log('end');
+        this.setCanSkip(false);
+        this.setStream(null);
+        this.actions.next();
+      }
+      if (this.audio.state != 'complete') {
+        this.setCanSkip(true);
+      }
+      if (this.audio.state == 'error') {
+        alert('error')
+      }
+    })
+
+    window.addEventListener("keydown", e => {
+      if (e.target == document.body || e.target.id == "pslider") {
+        if (e.keyCode == 32) {  // space bar
+          e.preventDefault()
+          this.actions.playPause();
+        }
+        else if (e.key == "n") this.actions.next();
+        else if (e.key == "b") this.actions.next(false);
+      }
+    });
+  }
+
+  restart(id, params={}) {
+    if (this.s?.info?.id == id) return;
+
+    this.setS({
       loaded: false,
       info: {
         id,
@@ -86,74 +154,15 @@ class Player {
       },
     });
 
-    [ this.stream, this.setStream ] = createSignal(null);
-    [ this.playing, this.setPlaying ] = createSignal(false);
-    [ this.audio, this.controls ] = createAudio(this.stream, this.playing);
-  
-    const [ canSkip, setCanSkip ] = createSignal(true);
+    this.setStream(null)
+    this.setPlaying(false);
+    this.setCanSkip(true);
 
     this.firstFetch().then(() => {
       this.prepare().then(() => {
         this.tryPlay()
       });
     })
-
-    this.actions = {
-      playPause: () => {
-        this.setPlaying(playing => !playing);
-      },
-      next: (right = true) => {
-        let delta = right ? 1 : -1;
-        let newi = this.s.i + delta;
-        if (newi < 0 || newi >= this.s.queue.length) return;
-        this.controls.pause();
-        this.setS("i", newi);
-        this.setS("inext", newi + delta);
-        this.prepare().then(() => {
-          this.tryPlay()
-        });
-      },
-      jump: i => {
-        if (i < 0 || i >= this.s.queue.length) return;
-        this.controls.pause();
-        this.setS("i", i);
-        this.setS("inext", i + 1);
-        this.prepare().then(() => {
-          this.tryPlay()
-        });
-      }
-    }
-
-    createEffect(() => {
-      if (this.audio.state == 'complete' && canSkip()) {
-        console.log('end');
-        setCanSkip(false);
-        this.setStream(null);
-        this.actions.next();
-      }
-      if (this.audio.state != 'complete') {
-        setCanSkip(true);
-      }
-      if (this.audio.state == 'error') {
-        alert('error')
-      }
-    })
-
-    // this.pimg.addEventListener("load", () => {
-    //     var c = getDominantColor(this.colorthief, this.pimg);
-    //     this.root.style.setProperty('--c-background', c);
-    // })
-
-    window.addEventListener("keydown", e => {
-      if (e.target == document.body || e.target.id == "pslider") {
-        if (e.keyCode == 32) {  // space bar
-          e.preventDefault()
-          this.actions.playPause();
-        }
-        else if (e.key == "n") this.actions.next();
-        else if (e.key == "b") this.actions.next(false);
-      }
-    });
   }
 
   appendToQueue(nqueue) {
@@ -162,13 +171,17 @@ class Player {
       ...nqueue.map(video => {
         return {
           id: video.id,
+          type: video.type,
           queueId: video.queueId,
           title: video.title,
+          artistId: video.artistId,
           artist: video.artist,
           album: video.album,
+          albumId: video.albumId,
           thumbnails: JSON.stringify(video.thumbnails),
           stream: video.stream,
-          index: video.index
+          index: video.index,
+          duration: video.duration
         }
       })
     ]);
@@ -194,6 +207,7 @@ class Player {
       const queue = result.songs;
       for (let i = 0; i < queue.length; i++) {
         queue[i].index = i+1;
+        queue[i].type = 'SONG'
       }
       this.setS("info", info => {
         return {
@@ -275,6 +289,17 @@ export default function App() {
 
   const navigate = useNavigate();
 
+  const colorthief = new ColorThief()
+
+  const onImageLoad = (load) => {
+    var img = load.srcElement
+    var c = colorthief.getColor(img);
+    var nc = Math.sqrt(c.map(x => x*x).reduce((a,b)=>a+b,0))
+    c = c.map(x => x*310/nc);
+    c = `rgb(${c.join(',')})`;
+    document.querySelector(':root').style.setProperty('--color-d', c);
+  }
+
   return (
     <div class="flex flex-col ls:flex-row flex-grow ls:max-h-full ls:overflow-y-scroll">
 
@@ -289,16 +314,16 @@ export default function App() {
             <div style="width: min(min(90vw, 90vh),20rem)" class="flex flex-col items-center justify-center gap-3">
               <Show when={player.s.info.artist}>
                 <div class="flex flex-col items-center leading-[1.2] mt-1">
-                  <span>Playing <span class="font-bold">{player.s.info.title}</span> by <A target="_blank" href={`/artist/${player.s.info.artistId}`} class="italic">{player.s.info.artist}</A></span>
+                  <span class="text-center">Playing <span class="font-bold">{player.s.info.title}</span> (album) by <A href={`/artist/${player.s.info.artistId}`} class="italic">{player.s.info.artist}</A></span>
                 </div>
               </Show>
               <div class="bg-b/20 w-full rounded-md">
-                <img class="rounded-md" loading="lazy" crossorigin="anonymous" src={chooseThumbnailUrl(player.s.info.thumbnails || player.s.current.thumbnails)} />
+                <img class="rounded-md" onLoad={onImageLoad} src={window.location.origin + '/api/img?url=' + chooseThumbnailUrl(player.s.info.thumbnails || player.s.current.thumbnails)} />
               </div>
               <div class="flex flex-col items-center leading-[1.2]">
-                <A target="_blank" href={url(player.s.current)} class="font-bold">{player.s.current.title}</A>
-                <A target="_blank" href={`/album/${player.s.current.albumId}`}>{player.s.current.album}</A>
-                <A target="_blank" href={`/artist/${player.s.current.artistId}`} class="italic">{player.s.current.artist}</A>
+                <A onClick={() => player.restart(player.s.current.id)} href={url(player.s.current)} class="font-bold text-center">{player.s.current.title}</A>
+                <A onClick={() => player.restart(player.s.current.albumId)} href={`/player/${player.s.current.albumId}`} class="text-center">{player.s.current.album}</A>
+                <A href={`/artist/${player.s.current.artistId}`} class="italic text-center">{player.s.current.artist}</A>
               </div>
               {/* time indicator */}
               <div class="w-full h-7 flex flex-col items-center">
@@ -357,24 +382,12 @@ export default function App() {
       <div style="min-width:60vw" class="bg-d flex flex-row flex-1 w-full justify-center ls:max-h-full ls:overflow-y-scroll">
         <div class="flex flex-col gap-2 py-4 px-4 w-130 max-h-full overflow-y-scroll">
           <SearchBar navigator={navigate} />
-
           <h3 class="text-xl font-bold">Queue</h3>
-
           <div class="flex-grow max-h-full overflow-y-scroll">
-            <QueueResults queue={player.s.queue} i={player.s.i} onClick={i => player.actions.jump(i)} album={!player.s.info.issong} />
-          </div>
-
-          <Show when={player.s.queue.length > 0} fallback={<div>Loading queue...</div>}>
-            {/* <Show when={player.s.queue()}>
+            <Show when={player.s.queue.length > 0} fallback="Loading queue...">
+              <QueueResults queue={player.s.queue} i={player.s.i} onClick={i => player.actions.jump(i)} album={!player.s.info.issong} />
             </Show>
-            <Switch>
-              <Match when={player.s.error}>
-                <span>Error: {player.s.error}</span>
-              </Match>
-              <Match when={player()}>
-              </Match>
-            </Switch> */}
-          </Show>
+          </div>
         </div>
       </div>
 

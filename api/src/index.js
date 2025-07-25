@@ -94,6 +94,23 @@ app.get('/api/video/:id', dmw, async (req, res) => {
   res.json(video);
 })
 
+app.get('/api/img', (req, res) => {
+  var params = utils.parseQueryString(req._parsedUrl.query);
+  var url = params.url;
+  console.log(url)
+  ytm.ww.get(
+    "thumbnail", "png",
+    url,
+    { responseType: 'stream' }
+  ).then(axres => {
+      res.status(200);
+      axres.pipe(res);
+  }).catch(err => {
+      res.status(500);
+      res.json({ message: err.toString() })
+  })
+})
+
 app.get('/api/colors', async (req, res) => {
   var params = utils.parseQueryString(req._parsedUrl.query);
   if (!params.id) throw new Error("No id provided.");
