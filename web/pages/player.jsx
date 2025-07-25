@@ -72,7 +72,7 @@ class Player {
       }
       if (this.audio.state == 'error') {
         const code = this.audio.player.networkState;
-        if (code = 1) {
+        if (code == 1) {
           // succesfully loaded : autoplay is probably prevented
           // this.pautoplay.classList.add("on");
           this.setPlaying(false);
