@@ -12,7 +12,6 @@
     "@solidjs/router": "^0.15.3",
     "@tailwindcss/vite": "^4.1.11",
     "colorthief": "^2.6.0",
-    "dotenv": "^17.2.1",
     "solid-js": "^1.9.7",
     "tailwindcss": "^4.1.11"
   },

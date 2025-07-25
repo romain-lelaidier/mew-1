@@ -1,13 +1,16 @@
 import { defineConfig } from 'drizzle-kit';
+import dotenv from 'dotenv';
+
+const config = dotenv.config({ path: './.env' }).parsed!;
 
 export default defineConfig({
   out: './drizzle',
   schema: './src/db',
   dialect: 'mysql',
   dbCredentials: {
-    host: process.env.DB_MYSQL_HOST!,
-    user: process.env.DB_MYSQL_USER!,
-    database: process.env.BD_MYSQL_DATABASE!,
-    password: process.env.DB_MYSQL_PASSWORD!
+    host: config.DB_MYSQL_HOST!,
+    user: config.DB_MYSQL_USER!,
+    database: config.DB_MYSQL_DATABASE!,
+    password: config.DB_MYSQL_PASSWORD!
   },
 });

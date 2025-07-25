@@ -8,5 +8,8 @@
     "build:web": "cd web && npm run build",
     "build:api": "cd api && npm run build",
     "build": "npm run build:web && npm run build:api"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
   }
 }
