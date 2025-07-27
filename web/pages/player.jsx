@@ -62,7 +62,6 @@ class Player {
 
     createEffect(() => {
       if (this.audio.state == 'complete' && this.canSkip()) {
-        console.log('end');
         this.setCanSkip(false);
         this.setStream(null);
         this.actions.next();
@@ -73,8 +72,6 @@ class Player {
       if (this.audio.state == 'error') {
         const code = this.audio.player.networkState;
         if (code == 1) {
-          // succesfully loaded : autoplay is probably prevented
-          // this.pautoplay.classList.add("on");
           this.setPlaying(false);
           this.setRequestAutoplay(true);
           var clicked = false;
@@ -87,7 +84,7 @@ class Player {
           })
           return;
         }
-        this.actions.next();
+        this.setS("queue", this.s.i, "error", code);
         console.log('audio error: networkState = ' + code);
       }
     })
@@ -316,22 +313,24 @@ export default function App() {
               {/* time indicator */}
               <div class="w-full h-7 flex flex-col items-center">
                 <Show when={player.audio.state != "loading"}>
-                  {/* time spans */}
-                  <div class="w-full flex flex-row justify-between text-xs">
-                    <span>{durationString(player.audio.currentTime)}</span>
-                    <span>{durationString(player.audio.duration)}</span>
-                  </div>
-                  {/* progress bar */}
-                  <div class="h-4 w-11/12 relative">
-                    {/* background */}
-                    <div class="block w-full h-1/5 bg-b/20 rounded-full absolute top-2/5"></div>
-                    {/* buffered */}
-                    <div class="block h-1/5 bg-b/20 rounded-full absolute top-2/5"></div>
-                    {/* progress */}
-                    <div class="block h-1/5 bg-b rounded-full absolute top-2/5" style={{width: `${100 * player.audio.currentTime / player.audio.duration}%`}}></div>
-                    {/* slider */}
-                    <input id="pslider" type="range" value={(player.audio.currentTime / player.audio.duration).toString()} min="0" max="1" step="0.0001" onInput={({ target }) => player.controls.seek((+target.value) * player.audio.duration) } class="absolute h-full" />
-                  </div>
+                  <Show when={!player.s.current.error} fallback={<div>Error playing audio (code {player.s.current.error})</div>}>
+                    {/* time spans */}
+                    <div class="w-full flex flex-row justify-between text-xs">
+                      <span>{durationString(player.audio.currentTime)}</span>
+                      <span>{durationString(player.audio.duration)}</span>
+                    </div>
+                    {/* progress bar */}
+                    <div class="h-4 w-11/12 relative">
+                      {/* background */}
+                      <div class="block w-full h-1/5 bg-b/20 rounded-full absolute top-2/5"></div>
+                      {/* buffered */}
+                      <div class="block h-1/5 bg-b/20 rounded-full absolute top-2/5"></div>
+                      {/* progress */}
+                      <div class="block h-1/5 bg-b rounded-full absolute top-2/5" style={{width: `${100 * player.audio.currentTime / player.audio.duration}%`}}></div>
+                      {/* slider */}
+                      <input id="pslider" type="range" value={(player.audio.currentTime / player.audio.duration).toString()} min="0" max="1" step="0.0001" onInput={({ target }) => player.controls.seek((+target.value) * player.audio.duration) } class="absolute h-full" />
+                    </div>
+                  </Show>
                 </Show>
               </div>
               {/* buttons */}
