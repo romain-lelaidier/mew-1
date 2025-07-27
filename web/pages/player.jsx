@@ -86,6 +86,8 @@ class Player {
         }
         this.setS("queue", this.s.i, "error", code);
         console.log('audio error: networkState = ' + code);
+      } else {
+        this.setS("queue", this.s.i, "error", null);
       }
     })
 
