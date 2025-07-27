@@ -99,6 +99,7 @@ app.get('/api/album/:id', dmw, async (req, res) => {
 app.get('/api/video/:id', dmw, async (req, res) => {
   const obj = { id: req.params.id };
   var params = utils.parseQueryString(req._parsedUrl.query);
+  if (params.queueId) obj.queueId = params.queueId;
   if (params.qid) obj.queueId = params.qid;
   const video = await ytm.getVideo(obj);
   log('song', req, { vid: req.params.id, name: video.video.title, subname: video.video.artist });
