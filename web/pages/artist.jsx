@@ -27,7 +27,7 @@ export default function App() {
         <Title>Mew - {artist()?.title || 'Loading...'}</Title>
       </MetaProvider>
 
-      <BackButton />
+      {/* <BackButton /> */}
 
       <SearchBar navigator={navigate} />
 
