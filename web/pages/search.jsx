@@ -26,7 +26,7 @@ export default function App() {
         <Title>Mew - {query()}</Title>
       </MetaProvider>
 
-      {/* <BackButton /> */}
+      <BackButton />
 
       <SearchBar onsubmit={setQuery} query={originQuery} />
 

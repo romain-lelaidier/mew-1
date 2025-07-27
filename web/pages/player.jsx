@@ -278,9 +278,7 @@ export default function App() {
         <Title>Mew - {player.s.current ? player.s.current.title : 'Loading...'}</Title>
       </MetaProvider>
 
-      <div class="hidden ls:block">
-        <BackButton />
-      </div>
+      <BackButton />
 
       <Show when={player.requestAutoplay()}>
         <div class="absolute z-2 bg-d/90 w-full h-full flex items-center justify-center">
