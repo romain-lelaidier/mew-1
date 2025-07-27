@@ -68,8 +68,8 @@ const app = express();
 
 // throttling
 const limiter = rateLimit({
-  windowMs: 1 * 1000, // 2 seconds
-  limit: 2,
+  windowMs: 1 * 1000, // 1 second
+  limit: 4,
   keyGenerator: getip
 })
 
