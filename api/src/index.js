@@ -8,6 +8,9 @@ import * as utils from "./ytm/utils.js"
 import YTM from "./ytm/ytm.js";
 import * as fs from "fs";
 
+// ip getter
+const getip = (req) => req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
 // ----- database connection -----
 const connection = await mysql.createConnection({
   host: process.env.DB_MYSQL_HOST,
@@ -23,15 +26,12 @@ var ytm = new YTM(db);
 
 // ----- logger -----
 async function log(origin, req, { vid='', name='', subname='' }) {
-  var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  ip = ip.substring(0, 32);
-  origin = origin.substring(0, 8);
   try {
     await db.insert(schema.logs)
       .values({
-        ip,
+        ip: getip(req).substring(0, 32),
         date: new Date(),
-        type: origin,
+        type: origin.substring(0, 8),
         vid, name, subname
       })
   } catch(err) {
@@ -68,9 +68,9 @@ const app = express();
 
 // throttling
 const limiter = rateLimit({
-  windowMs: 2 * 1000, // 2 seconds
-  limit: 3,
-  keyGenerator: (req) => req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  windowMs: 1 * 1000, // 2 seconds
+  limit: 2,
+  keyGenerator: getip
 })
 
 app.use(limiter);

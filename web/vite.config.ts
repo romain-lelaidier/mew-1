@@ -23,7 +23,7 @@ export default defineConfig({
             // console.log('proxy error', err);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            proxyReq.setHeader('x-forwarded-for', req.socket.remoteAddress);
+            proxyReq.setHeader('x-forwarded-for', req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress);
             console.log('Sending Request to the Target:', req.method, req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
