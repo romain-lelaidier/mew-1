@@ -1,6 +1,8 @@
 import express from "express";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
+import { rateLimit } from 'express-rate-limit';
+
 import * as schema from "./db/schema.js";
 import * as utils from "./ytm/utils.js"
 import YTM from "./ytm/ytm.js";
@@ -63,6 +65,15 @@ function dmw(req, res, next) {
 
 // ----- web server -----
 const app = express();
+
+// throttling
+const limiter = rateLimit({
+  windowMs: 2 * 1000, // 2 seconds
+  limit: 3,
+  keyGenerator: (req) => req.headers['x-forwarded-for'] || req.socket.remoteAddress
+})
+
+app.use(limiter);
 
 app.get('/api/search_suggestions/:query', async (req, res) => {
   const results = await ytm.getSearchSuggestions(req.params.query);
