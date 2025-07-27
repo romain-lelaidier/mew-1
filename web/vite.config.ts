@@ -15,14 +15,15 @@ export default defineConfig({
     port,
     proxy: {
       '/api': {
-        target: 'http://localhost:2998',
+        target: 'http://localhost:' + config.PORT_MEW_API,
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
+            // console.log('proxy error', err);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
+            proxyReq.setHeader('x-forwarded-for', req.socket.remoteAddress);
             console.log('Sending Request to the Target:', req.method, req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {

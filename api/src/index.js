@@ -22,8 +22,8 @@ var ytm = new YTM(db);
 // ----- logger -----
 async function log(origin, req, { vid='', name='', subname='' }) {
   var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  ip = ip.substring(0, 16)
-  origin = origin.substring(0, 4);
+  ip = ip.substring(0, 32);
+  origin = origin.substring(0, 8);
   try {
     await db.insert(schema.logs)
       .values({

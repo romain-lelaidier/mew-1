@@ -27,8 +27,8 @@ export const logs = mysqlTable(
   {
     id: int().primaryKey().autoincrement(),
     date: datetime(),
-    ip: varchar({ length: 16 }),
-    type: varchar({ length: 4 }),
+    ip: varchar({ length: 32 }),
+    type: varchar({ length: 8 }),
     vid: varchar({ length: 11 }),
     name: varchar({ length: 128 }),
     subname: varchar({ length: 128 })
