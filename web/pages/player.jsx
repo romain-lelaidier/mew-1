@@ -71,7 +71,7 @@ class Player {
       }
       if (this.audio.state == 'error') {
         const code = this.audio.player.networkState;
-        if (code == 1) {
+        if (code == 1 || code == 2) {
           this.setPlaying(false);
           this.setRequestAutoplay(true);
           var clicked = false;
@@ -87,7 +87,9 @@ class Player {
         this.setS("queue", this.s.i, "error", code);
         console.log('audio error: networkState = ' + code);
       } else {
-        this.setS("queue", this.s.i, "error", null);
+        if (this.s.current && this.s.current.error) {
+          this.setS("queue", this.s.i, "error", null);
+        }
       }
     })
 
@@ -313,7 +315,7 @@ export default function App() {
               {/* time indicator */}
               <div class="w-full h-7 flex flex-col items-center">
                 <Show when={player.audio.state != "loading"}>
-                  <Show when={!player.s.current.error} fallback={<div>Error playing audio (code {player.s.current.error})</div>}>
+                  <Show when={player.s.current && !player.s.current.error} fallback={<div>Error playing audio (code {player.s.current.error})</div>}>
                     {/* time spans */}
                     <div class="w-full flex flex-row justify-between text-xs">
                       <span>{durationString(player.audio.currentTime)}</span>
