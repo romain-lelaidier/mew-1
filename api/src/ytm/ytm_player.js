@@ -43,6 +43,18 @@ export class YTMPlayer {
         Yobj = matchYobj[1].split(matchYobj[2][2]);
       }
     }
+
+    if (!Yobj) {
+      // Yobj may be saved as plain array: trying a basic extraction
+      var matchYobj = this.js.match(`var ${regescape(Y)}=\\[`);
+      if (matchYobj) {
+        var njs = this.js.substring(matchYobj.index, matchYobj.index + 10000);
+        var encloser = njs.indexOf('"],');
+        njs = njs.substring(0, encloser + 2);
+        Yobj = eval(`()=>{${njs};return ${Y}}`)();
+      }
+    }
+
     if (!Yobj) throw "Error while extracting player: could not find Y code";
 
     var matchH = rawInstructions[1].match(`^(.+)\\[${regescape(Y)}\\[([0-9]+)\\]\\]\\(${regescape(B)},([0-9])+\\)$`)
