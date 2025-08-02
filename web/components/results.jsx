@@ -281,7 +281,7 @@ function SearchResultGroup(props) {
   )
 }
 
-function AggregateSpans(props) {
+export function AggregateSpans(props) {
   var strs = props.strs.filter(element => element != null && element[0] != null);
   if (strs.length == 0) return (<></>);
   return (

@@ -3,6 +3,12 @@ import axios from "axios";
 import { extractColors } from "extract-colors"
 import getPixels from "get-pixels";
 
+export function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 export function parseQueryString(qs) {
   var params = new URLSearchParams(qs);
   var object = {};
@@ -132,6 +138,16 @@ export function chooseThumbnail(thumbnails, width=Infinity) {
   var filtered = sorted.filter(thb => thb.width <= width)
   if (filtered.length > 0) return filtered[0]
   return sorted[sorted.length - 1];
+}
+
+export function chooseThumbnailUrl(thumbnails, width=Infinity) {
+  if (!thumbnails || thumbnails.length == 0) return;
+  if (typeof thumbnails == 'string') thumbnails = JSON.parse(thumbnails)
+  var sorted = thumbnails
+    .sort((thb1, thb2) => thb2.width - thb1.width);
+  var filtered = sorted.filter(thb => thb.width <= width)
+  if (filtered.length > 0) return filtered[0].url;
+  return sorted[sorted.length - 1].url;
 }
 
 export function formatBytes(a,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}

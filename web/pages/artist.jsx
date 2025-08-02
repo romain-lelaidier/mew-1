@@ -4,7 +4,7 @@ import { createResource, createSignal, onMount, Show, Switch } from 'solid-js';
 import SearchBar from "../components/searchbar";
 import { SearchResultsArtist } from '../components/results';
 import { MetaProvider, Title } from "@solidjs/meta";
-import { BackButton } from "../components/backbutton";
+import { Layout } from "../components/layout";
 
 async function fetchArtist(id) {
   // if (!!id.match(/^[a-zA-Z0-9_-]{24}$/)) return;
@@ -21,13 +21,11 @@ export default function App() {
   const [ artist ] = createResource(id, fetchArtist)
 
   return (
-    <div class="bg-d flex flex-col flex-grow gap-2 py-4 px-4 sm:mx-16 md:mx-32 lg:mx-48 xl:mx-64 2xl:mx-80">
+    <Layout>
 
       <MetaProvider>
         <Title>Mew - {artist()?.title || 'Loading...'}</Title>
       </MetaProvider>
-
-      <BackButton />
 
       <SearchBar navigator={navigate} />
 
@@ -43,6 +41,6 @@ export default function App() {
         </Switch>
       </Show>
 
-    </div>
+    </Layout>
   )
 }

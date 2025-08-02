@@ -1,10 +1,9 @@
 import fs from "fs";
-import cp from "child_process";
 
 import { YTMParser} from "./ytm_parser.js";
 import { YTMPlayer } from "./ytm_player.js";
 import * as utils from "./utils.js";
-import { palettes } from "../db/schema.js";
+import { palettes, songs } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 
 export default class YTM {
@@ -287,6 +286,24 @@ export default class YTM {
     })
   }
 
+  async saveSong(song) {
+    try {
+      await this.db
+        .insert(songs)
+        .values({
+          id: song.id,
+          title: song.title.substring(0, 128),
+          artist: song.artist.substring(0, 128),
+          album: song.album.substring(0, 128),
+          artistId: song.artistId,
+          albumId: song.albumId,
+          thumbnail: utils.chooseThumbnailUrl(song.thumbnails, 0)
+        })
+    } catch(err) {
+      // console.error(err);
+    }
+  }
+
   // ----- API FUNCTIONS -----
 
   async getSearchSuggestions(query) {
@@ -416,9 +433,10 @@ export default class YTM {
     //  - video : an object with the extracted data and formats
     //  - queue : a list
 
+    if (!("id" in info)) throw new Error("No id provided.");
+    if (!info.id.match(/^[a-zA-Z0-9_-]{11}$/)) throw new Error("Invalid id.");
+    
     return new Promise((resolve, reject) => {
-      if (!("id" in info)) throw new Error("No id provided.");
-      if (!info.id.match(/^[a-zA-Z0-9_-]{11}$/)) throw new Error("Invalid id.");
 
       console.log(`${new Date().toLocaleString()} EU ${info.id}`)
 
@@ -455,6 +473,8 @@ export default class YTM {
           for (var [ key, value ] of Object.entries(info)) {
             if (!info.key) extractedInfo[key] = value
           }
+
+          this.saveSong(extractedInfo);
 
           resolve({
             video: extractedInfo,

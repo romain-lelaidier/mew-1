@@ -2,10 +2,12 @@ import express from "express";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import { rateLimit } from 'express-rate-limit';
+import jsonwebtoken from "jsonwebtoken";
 
 import * as schema from "./db/schema.js";
 import * as utils from "./ytm/utils.js"
 import YTM from "./ytm/ytm.js";
+import UM from "./um/um.js";
 import * as fs from "fs";
 
 // ip getter
@@ -23,6 +25,9 @@ const db = drizzle(connection, { schema, mode: "default" });
 
 // ----- youtube extractor -----
 var ytm = new YTM(db);
+
+// ----- users manager -----
+var um = new UM(db);
 
 // ----- logger -----
 async function log(origin, req, { vid='', name='', subname='' }) {
@@ -65,6 +70,8 @@ function dmw(req, res, next) {
 
 // ----- web server -----
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // throttling
 const limiter = rateLimit({
@@ -73,7 +80,9 @@ const limiter = rateLimit({
   keyGenerator: getip
 })
 
-app.use(limiter);
+// app.use(limiter);
+
+// ----- ytm -----
 
 app.get('/api/search_suggestions/:query', async (req, res) => {
   const results = await ytm.getSearchSuggestions(req.params.query);
@@ -108,11 +117,9 @@ app.get('/api/video/:id', dmw, async (req, res) => {
 
 app.get('/api/img', (req, res) => {
   var params = utils.parseQueryString(req._parsedUrl.query);
-  var url = params.url;
-  console.log(url)
   ytm.ww.get(
     "thumbnail", "png",
-    url,
+    params.url,
     { responseType: 'stream' }
   ).then(axres => {
       res.status(200);
@@ -130,6 +137,35 @@ app.get('/api/colors', async (req, res) => {
   const palette = await ytm.getColors(params.id, params.url);
   res.json(palette);
 })
+
+// ----- um -----
+
+app.post('/api/um/signup', (req, res, next) => um.createUser(req, res, next), (req, res) => um.logUser(req, res));
+app.post('/api/um/login', (req, res) => um.logUser(req, res));
+
+const authenticateJWT = (req, res, next) => {
+  const token = req.headers.authorization;
+  if (token) {
+    jsonwebtoken.verify(token, um.SECRET_KEY, (err, user) => {
+      if (err) {
+        return res.sendStatus(403);
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    res.sendStatus(401);
+  }
+};
+
+app.post('/api/um/relog', authenticateJWT, (req, res) => um.reLogUser(req, res));
+app.post('/api/pl/get', (req, res) => um.getPlaylist(req, res));
+app.post('/api/pl/create', authenticateJWT, (req, res) => um.createPlaylist(req, res));
+app.post('/api/pl/delete', authenticateJWT, (req, res) => um.removePlaylist(req, res));
+app.post('/api/pl/rename', authenticateJWT, (req, res) => um.renamePlaylist(req, res));
+app.post('/api/pl/add', authenticateJWT, (req, res) => um.addToPlaylist(req, res, ytm));
+app.post('/api/pl/remove', authenticateJWT, (req, res) => um.removeFromPlaylist(req, res));
+app.post('/api/um/playlists', authenticateJWT, (req, res) => um.getPlaylists(req, res));
 
 const PORT = process.env.PORT_MEW_API || 3000;
 app.listen(PORT, () => {

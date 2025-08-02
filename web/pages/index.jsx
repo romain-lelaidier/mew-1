@@ -1,15 +1,18 @@
-import { useParams } from '@solidjs/router';
 import { MetaProvider, Title } from "@solidjs/meta";
 import { useNavigate } from '@solidjs/router';
 
 import SearchBar from '../components/searchbar'
+import { u, uLogOut, uTryLog } from '../components/auth';
+import { LinkButton } from '../components/utils';
+import { Layout } from '../components/layout';
 
 export default function App() {
-  const params = useParams();
   const navigate = useNavigate();
 
+  uTryLog();
+
   return (
-    <div class="bg-d px-4 flex flex-col gap-2 flex-grow justify-center sm:mx-16 md:mx-32 lg:mx-48 xl:mx-64 2xl:mx-80">
+    <Layout center={true}>
       
       <MetaProvider>
         <Title>Mew</Title>
@@ -22,11 +25,15 @@ export default function App() {
 
       <SearchBar navigator={navigate}/>
 
+      <Show when={u.name} fallback=<div><LinkButton href="/login">Log in</LinkButton> or <LinkButton href="/signup">sign up</LinkButton> to save your playlists.</div>>
+        <div>Logged in as <span class="font-bold font-mono">{u.name}</span>. View your playlists <LinkButton href="/profile" /> or <LinkButton onclick={uLogOut} text="log out" />.</div>
+      </Show>
+
       <p class="text-red-700 font-bold max-w-150">
         This website is strictly restricted to its contributors.<br/>
         Users acknowledge that using this tool may be subject to third-party terms of service, including those of YouTube. By proceeding, users accept full responsibility for their actions and any resulting consequences.
       </p>
 
-    </div>
+    </Layout>
   );
 }

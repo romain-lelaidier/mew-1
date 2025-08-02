@@ -4,7 +4,7 @@ import { createResource, createSignal, onMount, Show, Switch } from 'solid-js';
 import SearchBar from "../components/searchbar";
 import { SearchResultsAll } from '../components/results';
 import { MetaProvider, Title } from "@solidjs/meta";
-import { BackButton } from "../components/backbutton";
+import { Layout } from "../components/layout";
 
 async function fetchResults(query) {
   if (query.length < 3) return;
@@ -20,13 +20,11 @@ export default function App() {
   const [ results ] = createResource(query, fetchResults)
 
   return (
-    <div class="bg-d flex flex-col flex-grow gap-2 py-4 px-4 sm:mx-16 md:mx-32 lg:mx-48 xl:mx-64 2xl:mx-80">
+    <Layout>
 
       <MetaProvider>
         <Title>Mew - {query()}</Title>
       </MetaProvider>
-
-      <BackButton />
 
       <SearchBar onsubmit={setQuery} query={originQuery} />
 
@@ -41,6 +39,7 @@ export default function App() {
           </Match>
         </Switch>
       </Show>
-    </div>
+    
+    </Layout>
   )
 }
