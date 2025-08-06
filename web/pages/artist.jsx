@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { createResource, createSignal, onMount, Show, Switch } from 'solid-js';
 
-import SearchBar from "../components/searchbar";
+import { NavBar } from "../components/navigation";
 import { SearchResultsArtist } from '../components/results';
 import { MetaProvider, Title } from "@solidjs/meta";
 import { Layout } from "../components/layout";
@@ -27,7 +27,7 @@ export default function App() {
         <Title>Mew - {artist()?.title || 'Loading...'}</Title>
       </MetaProvider>
 
-      <SearchBar navigator={navigate} />
+      <NavBar navigator={navigate} />
 
       {/* Search Results */}
       <Show when={!artist.loading} fallback={<div>Loading results...</div>}>

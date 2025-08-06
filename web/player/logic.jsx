@@ -154,8 +154,7 @@ export class Player {
           type: video.type,
           queueId: video.queueId,
           title: video.title,
-          artistId: video.artistId,
-          artist: video.artist,
+          artists: JSON.stringify(video.artists),
           album: video.album,
           albumId: video.albumId,
           thumbnails: JSON.stringify(video.thumbnails),
@@ -191,6 +190,7 @@ export class Player {
       this.setS("info", info => {
         return {
           ...info,
+          artists: JSON.stringify(result.artist),
           artist: result.artist,
           artistId: result.artistId,
           thumbnails: JSON.stringify(result.thumbnails),

@@ -1,7 +1,7 @@
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Icon } from "./icons";
 
-export default function SearchBar(props) {
+function SearchBar(props) {
   const [query, setQuery] = createSignal(props.query || '');
   const [error, setError] = createSignal(null);
 
@@ -10,10 +10,11 @@ export default function SearchBar(props) {
     if (query().length < 3) {
       return setError('Query length should be at least 3.');
     }
-    if (typeof props.navigator === 'function') {
-      props.navigator('/search/' + query());
-    } else if (typeof props.onsubmit === 'function') {
+    if (typeof props.onsubmit === 'function') {
       props.onsubmit(query())
+    }
+    if (typeof props.navigator === 'function') {
+      props.navigator('/search/' + encodeURIComponent(query()));
     }
   }
 
@@ -23,7 +24,7 @@ export default function SearchBar(props) {
   }
 
   return (
-    <div class="relative">
+    <div class="flex-grow">
       <form onSubmit={onsubmit}>
         <div class="relative">
           <input
@@ -34,7 +35,7 @@ export default function SearchBar(props) {
             class="w-full bg-white/10 border border-b/50 rounded-md pl-3 pr-9 py-1 transition duration-200 ease focus:outline-none hover:bg-white/30 shadow-sm focus:shadow"
           />
           <Show when={query().length > 0}>
-            <button type="reset" class="absolute right-8 top-0 p-2 flex flex-col justify-center">
+            <button type="reset" onClick={() => setQuery('')} class="absolute right-8 top-0 p-2 flex flex-col justify-center">
               <Icon type="xmark" size="1.1" />
             </button>
           </Show>
@@ -46,6 +47,17 @@ export default function SearchBar(props) {
       <Show when={error()}>
         <span class="text-red-700 p-3 italic">{error()}</span>
       </Show>
+    </div>
+  )
+}
+
+export function NavBar(props) {
+  return (
+    <div class="relative flex flex-row gap-1 items-center">
+      <Show when={!props.nobackbtn}>
+        <div class="flex items-center justify-center p-1" onclick={() => { if (typeof props.navigator === 'function') props.navigator(-1) }}><Icon type="angle-left"></Icon></div>
+      </Show>
+      <SearchBar {...props} />
     </div>
   )
 }

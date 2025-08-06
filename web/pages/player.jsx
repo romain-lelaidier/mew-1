@@ -2,7 +2,7 @@ import { useNavigate, useParams, useSearchParams, A } from "@solidjs/router";
 import { Show } from 'solid-js';
 import { MetaProvider, Title } from "@solidjs/meta";
 
-import SearchBar from "../components/searchbar";
+import { NavBar } from "../components/navigation";
 import { QueueResults } from '../components/results';
 import { chooseThumbnailUrl } from "../components/utils";
 import { getPlaylists, PlaylistAdder } from "../components/playlists";
@@ -66,7 +66,7 @@ export default function App() {
       {/* Queue */}
       <div style="min-width:50vw" class="bg-d flex flex-row flex-1 w-full justify-center ls:max-h-full ls:overflow-y-scroll">
         <div class="flex flex-col gap-2 py-4 px-4 w-130 max-h-full overflow-y-scroll">
-          <SearchBar navigator={navigate} />
+          <NavBar navigator={navigate} />
           <h3 class="text-xl font-bold">Queue</h3>
           <div class="flex-grow max-h-full overflow-y-scroll">
             <Show when={player.s.loaded} fallback="Loading queue...">

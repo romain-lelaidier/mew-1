@@ -1,7 +1,7 @@
 import { MetaProvider, Title } from "@solidjs/meta";
 import { useNavigate } from '@solidjs/router';
 
-import SearchBar from '../components/searchbar'
+import { NavBar } from '../components/navigation'
 import { u, uLogOut, uTryLog } from '../components/auth';
 import { LinkButton } from '../components/utils';
 import { Layout } from '../components/layout';
@@ -23,7 +23,7 @@ export default function App() {
         <h2 class="text-2xl">A minimalist YouTube Music player</h2>
       </div>
 
-      <SearchBar navigator={navigate}/>
+      <NavBar navigator={navigate} nobackbtn={true}/>
 
       <Show when={u.name} fallback=<div><LinkButton href="/login">Log in</LinkButton> or <LinkButton href="/signup">sign up</LinkButton> to save your playlists.</div>>
         <div>Logged in as <span class="font-bold font-mono">{u.name}</span>. View your playlists <LinkButton href="/profile" /> or <LinkButton onclick={uLogOut} text="log out" />.</div>

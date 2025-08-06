@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import { For, Match, Switch } from "solid-js";
+import { For } from "solid-js";
 import { url, chooseThumbnailUrl, durationString, viewCountString } from "./utils.jsx"
 
 export const mds = ' · ';
@@ -29,7 +29,7 @@ export function QueueResults(props) {
             <div>
               <span class="font-bold">{result.title}</span>
               <AggregateSpans strs={[
-                [result.artist],
+                [result.artists ? JSON.parse(result.artists).map(a => a.name).join(', ') : null],
                 [result.album, "italic"]
               ]} sep={mds} bf={<br/>} />
               <AggregateSpans strs={[
@@ -77,15 +77,15 @@ export function SearchResultsArtist(props) {
   }
   return (
     <>
-      <div style={{'--bg-url': `url(${chooseThumbnailUrl(artist.thumbnails)})`}} class="bg-b/10 bg-(image:--bg-urhl) rounded-md flex flex-row mt-1">
-        <img src={chooseThumbnailUrl(artist.thumbnails)} class="h-28 rounded-l-md" />
+      <div class="bg-b/10 flex flex-row flex-wrap overflow-hidden rounded-md mt-1">
+        <img src={chooseThumbnailUrl(artist.thumbnails)} class="max-h-28" />
         <div class="p-2 flex flex-col gap-1 justify-center">
           <div class="text-2xl">{artist.title}</div>
           <Show when={artist.viewCount}>
             <div>{viewCountString(artist.viewCount)} monthly listeners</div>
           </Show>
           <Show when={artist.shufflePlayPID || artist.radioPlayPID}>
-            <div class="flex flex-row gap-2 items-center">
+            <div class="flex flex-row flex-wrap gap-2 items-center">
               <Show when={artist.shufflePlayPID}>
                 <A href={`/player/${artist.shufflePlaySID}?qid=${artist.shufflePlayPID}`} class="bg-b py-1 px-3 rounded-md text-white flex flex-row items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 640 640" class="w-4 h-4">
@@ -161,7 +161,7 @@ export function SearchResultTop(props) {
         <div>
           <span class="font-bold">{result.title}</span>
           <AggregateSpans strs={[
-            [result.artist],
+            [result.artists ? result.artists.map(a => a.name).join(', ') : null],
             [result.album, "italic"]
           ]} sep={mds} bf={<br/>} />
           <AggregateSpans strs={[
@@ -198,7 +198,7 @@ function SearchResultGroup(props) {
               <div>
                 <span class="font-bold">{result.title}</span>
                 <AggregateSpans strs={[
-                  [result.artist],
+                  [result.artists ? result.artists.map(a => a.name).join(', ') : null],
                   [result.album, "italic"]
                 ]} sep={mds} bf={<br/>} />
                 <AggregateSpans strs={[

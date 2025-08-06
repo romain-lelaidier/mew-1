@@ -15,6 +15,7 @@ function setPlaylist(pl) {
 export const getPlaylists = async () => {
 
   if (!u.connected) await uTryLog();
+  if (!u.connected) return;
   const res = await post('/api/um/playlists');
   if (!is2xx(res)) throw await res.text();
   const pls = await res.json();
@@ -25,6 +26,7 @@ export const getPlaylists = async () => {
 export const createPlaylist = async (name) => {
 
   if (!u.connected) await uTryLog();
+  if (!u.connected) return;
   const res = await post('/api/pl/create', { name });
   if (!is2xx(res)) throw await res.text();
   const pl = await res.json();
@@ -35,6 +37,7 @@ export const createPlaylist = async (name) => {
 export const addToPlaylist = async (pid, sid) => {
 
   if (!u.connected) await uTryLog();
+  if (!u.connected) return;
   const res = await post('/api/pl/add', { pid, sid });
   if (!is2xx(res)) throw await res.text();
   const pl = await getPlaylist(pid);
@@ -44,8 +47,8 @@ export const addToPlaylist = async (pid, sid) => {
 
 export const removeFromPlaylist = async (pid, sid) => {
 
-  console.log(pid, sid);
   if (!u.connected) await uTryLog();
+  if (!u.connected) return;
   const res = await post('/api/pl/remove', { pid, sid });
   if (!is2xx(res)) throw await res.text();
   const pl = await getPlaylist(pid);
@@ -66,6 +69,7 @@ export const togglePlaylistSong = async (pid, sid) => {
 export const renamePlaylist = async (pid, name) => {
 
   if (!u.connected) await uTryLog();
+  if (!u.connected) return;
   const res = await post('/api/pl/rename', { pid, name });
   if (!is2xx(res)) throw await res.text();
   const pl = await getPlaylist(pid);
@@ -76,6 +80,7 @@ export const renamePlaylist = async (pid, name) => {
 export const getPlaylist = async (pid) => {
 
   if (!u.connected) await uTryLog();
+  if (!u.connected) return;
   const res = await post('/api/pl/get', { pid });
   if (!is2xx(res)) throw await res.text();
   return await res.json();
@@ -85,6 +90,7 @@ export const getPlaylist = async (pid) => {
 export const removePlaylist = async (pid) => {
   
   if (!u.connected) await uTryLog();
+  if (!u.connected) return;
   const res = await post('/api/pl/delete', { pid });
   if (!is2xx(res)) throw await res.text();
   setU("playlists", pid, null);

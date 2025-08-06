@@ -10,6 +10,12 @@ export class YTMParser {
           "MUSIC_PAGE_TYPE_ALBUM": "album"
         } [ ytType ];
         if (type) {
+          const listname = type + 's';
+          if (!musicResult[listname]) musicResult[listname] = [];
+          musicResult[listname].push({
+            name: run.text,
+            id: run.navigationEndpoint.browseEndpoint.browseId
+          });
           musicResult[type] = run.text;
           musicResult[type + "Id"] = run.navigationEndpoint.browseEndpoint.browseId
         }

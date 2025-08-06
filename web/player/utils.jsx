@@ -1,5 +1,5 @@
 import ColorThief from "colorthief";
-import { createSignal, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { durationString, url } from "../components/utils";
 import { player } from "./logic";
@@ -56,7 +56,15 @@ export function PInfos(props) {
     <>
       <A onClick={() => player.start(player.s.current.id)} href={url(player.s.current)} class="font-bold">{player.s.current.title}</A>
       <A onClick={() => player.start(player.s.current.albumId)} href={`/player/${player.s.current.albumId}`}>{player.s.current.album}</A>
-      <A href={`/artist/${player.s.current.artistId}`} class="italic">{player.s.current.artist}</A>
+      <div class="flex flex-row">
+        <For each={JSON.parse(player.s.current.artists)}>{(artist, i) => 
+          <>
+            <Show when={i() > 0}><span class="mr-1">,</span></Show>
+            <A href={`/artist/${artist.id}`} class="italic">{artist.name}</A>
+          </>
+        }
+        </For>
+      </div>
     </>
   )
 }
