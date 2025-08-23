@@ -232,6 +232,9 @@ export class YTMParser {
     for (var fixedColumn of renderer.fixedColumns) {
       this.parseRuns(fixedColumn.musicResponsiveListItemFixedColumnRenderer.text.runs, result);
     }
+    if (result.id == '7LKuBAi_gf4') {
+      console.log(JSON.stringify(renderer))
+    }
     return result;
   }
 

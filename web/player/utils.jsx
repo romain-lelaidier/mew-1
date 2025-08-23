@@ -56,15 +56,17 @@ export function PInfos(props) {
     <>
       <A onClick={() => player.start(player.s.current.id)} href={url(player.s.current)} class="font-bold">{player.s.current.title}</A>
       <A onClick={() => player.start(player.s.current.albumId)} href={`/player/${player.s.current.albumId}`}>{player.s.current.album}</A>
-      <div class="flex flex-row">
-        <For each={JSON.parse(player.s.current.artists)}>{(artist, i) => 
-          <>
-            <Show when={i() > 0}><span class="mr-1">,</span></Show>
-            <A href={`/artist/${artist.id}`} class="italic">{artist.name}</A>
-          </>
-        }
-        </For>
-      </div>
+      <Show when={player.s.current.artists}>
+        <div class="flex flex-row">
+          <For each={JSON.parse(player.s.current.artists)}>{(artist, i) => 
+            <>
+              <Show when={i() > 0}><span class="mr-1">,</span></Show>
+              <A href={`/artist/${artist.id}`} class="italic">{artist.name}</A>
+            </>
+          }
+          </For>
+        </div>
+      </Show>
     </>
   )
 }

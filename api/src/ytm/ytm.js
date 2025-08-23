@@ -476,10 +476,16 @@ export default class YTM {
 
           this.saveSong(extractedInfo);
 
-          resolve({
-            video: extractedInfo,
-            queue
-          })
+          console.log(info)
+
+          if (info.withQueue && queue.length == 0) {
+            this.downloadQueue(info.id, extractedInfo.queueId).then(queue => {
+              resolve({ video: extractedInfo, queue })
+            })
+          } else {
+            resolve({ video: extractedInfo, queue })
+          }
+
         }).catch(reject);
       }).catch(reject);
     })

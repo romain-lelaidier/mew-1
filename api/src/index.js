@@ -14,14 +14,16 @@ import * as fs from "fs";
 const getip = (req) => req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
 // ----- database connection -----
-const connection = await mysql.createConnection({
+const pool = await mysql.createPool({
   host: process.env.DB_MYSQL_HOST,
   user: process.env.DB_MYSQL_USER,
   database: process.env.DB_MYSQL_DATABASE,
-  password: process.env.DB_MYSQL_PASSWORD
+  password: process.env.DB_MYSQL_PASSWORD,
+  idleTimeout: 10000,
+  enableKeepAlive: true
 })
 
-const db = drizzle(connection, { schema, mode: "default" });
+const db = drizzle(pool, { schema, mode: "default" });
 
 // ----- youtube extractor -----
 var ytm = new YTM(db);
@@ -110,6 +112,7 @@ app.get('/api/video/:id', dmw, async (req, res) => {
   var params = utils.parseQueryString(req._parsedUrl.query);
   if (params.queueId) obj.queueId = params.queueId;
   if (params.qid) obj.queueId = params.qid;
+  if (params.wq) obj.withQueue = true;
   const video = await ytm.getVideo(obj);
   log('song', req, { vid: req.params.id, name: video.video.title, subname: video.video.artist });
   res.json(video);

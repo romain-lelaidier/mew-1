@@ -35,7 +35,8 @@ export class Player {
         this.controls.pause();
         let delta = right ? 1 : -1;
         let newi = this.s.i + delta;
-        if (newi < 0 || newi >= this.s.queue.length) return;
+        if (newi < 0) return;
+        if (newi >= this.s.queue.length) newi = 0;
         this.setS("i", newi);
         this.setS("inext", newi + delta);
         this.prepare().then(() => {
@@ -170,6 +171,7 @@ export class Player {
     if (this.s.info.type == 'SONG') {
       var url = `${window.location.origin}/api/video/${this.s.info.id}`;
       if (this.s.info.qid) url += '?qid=' + this.s.info.qid;
+      else url += '?wq=y'
       const response = await fetch(url);
       const { video, queue } = await response.json();
       if (queue.length == 0 || queue[0].id != video.id) {
@@ -261,9 +263,10 @@ export class Player {
     if (i != undefined) {
       var url = `${window.location.origin}/api/video/${this.s.queue[i].id}`
       if (wq) url += '?qid=' + (this.s.info.qid || this.s.queue[i].queueId);
-      console.log('prepare', i, wq, url)
+      console.log('prepare', i, url)
       const response = await fetch(url);
       const { video, queue } = await response.json();
+      this.setS("queue", i, "artists", JSON.stringify(video.artists))
       this.setS("queue", i, "stream", video.stream);
       this.setS("queue", i, "thumbnails", JSON.stringify(video.thumbnails));
       this.appendToQueue(queue);
