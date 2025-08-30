@@ -5,7 +5,7 @@
     "start:web": "vite --host",
     "start:api": "node --env-file=.env ./api/index.js",
     "start": "npm run start:web & npm run start:api",
-    "build": "npm run build:web",
+    "build": "vite build",
     "serve": "vite preview & npm run start:api"
   },
   "dependencies": {
