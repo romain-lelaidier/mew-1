@@ -1,4 +1,7 @@
-import { A, useNavigate } from "@solidjs/router";
+import { A, useLocation, useNavigate } from "@solidjs/router";
+import { Icon } from "./icons";
+
+export const mds = " · ";
 
 export function chooseThumbnailUrl(thumbnails, width=Infinity) {
   if (!thumbnails || thumbnails.length == 0) return;
@@ -59,20 +62,47 @@ export function durationString(duration) {
   return Math.floor(duration / 60) + ':' + pad(2, '0', (duration%60).toString())
 }
 
-export function RoundButton(props) {
-  return (
-    <span class="w-fit rounded-md block bg-b text-white px-3 py-1 cursor-pointer" onclick={props.onclick}>{props.text}</span>
-  )
+
+export function Link(props) {
+  const location = useLocation();
+  return <A state={{ previous: location.pathname }} {...props} />;
+}
+
+export function BackButton() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const backPath = () => (location.state?.previous ? -1 : '/');
+  return <button class="uppercase flex flex-row gap-1 items-center cursor-pointer text-base" onClick={() => navigate(backPath())}><Icon type="arrow-left" size={1}/><span class="pt-[0.8]">back</span></button>;
 }
 
 export function LinkButton(props) {
-  // const classes = "w-fit rounded-md px-1 py-0.5 bg-white/10 cursor-pointer";
-  const classes = "w-fit underline cursor-pointer";
+  const classes = "w-fit font-bold cursor-pointer";
   const text = props.text || props.children || 'here'
   if (props.href) {
-    return <A href={props.href} class={classes}>{text}</A>
+    return <Link href={props.href} class={classes}>{text}</Link>
   }
   if (props.onclick || props.onClick) {
     return <span onclick={(props.onclick || props.onClick)} class={classes}>{text}</span>
   }
+}
+
+export function LinkIcon(props) {
+  return (
+    <Link {...props} class="flex flex-row items-center gap-1 font-bold"><Icon type={props.type}/>{props.text}</Link>
+  )
+}
+
+export function User(props) {
+  return (
+    // <LinkIcon type="dna" text={props.user.name} href={"/profile/" + props.user.name}/>
+    <Link class="inline flex flex-row gap-1" href={"/profile/" + props.user.name}>
+      <Show when={props.user.iso}>
+        <Flag iso={props.user.iso}/>
+        <span> </span>
+      </Show>
+      {/* <Icon type="dna"/>
+      <span> </span> */}
+      <span class="font-bold">{props.user.name}</span>
+    </Link>
+  )
 }

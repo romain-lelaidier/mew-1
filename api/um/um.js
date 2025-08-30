@@ -140,29 +140,33 @@ export default class UM {
     }
   }
 
+  async getPlaylistsFromUser(user) {
+    var playlistsRes = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.id, user.id))
+      .innerJoin(userPlaylists, eq(users.id, userPlaylists.uid))
+      .innerJoin(playlists, eq(userPlaylists.pid, playlists.id))
+    var response = [];
+    for (const playlistRes of playlistsRes) {
+      var playlistSongsRes = await this.db
+        .select()
+        .from(playlistSongs)
+        .where(eq(playlistSongs.pid, playlistRes.playlists.id));
+      response.push({
+        id: playlistRes.playlists.id,
+        name: playlistRes.playlists.name,
+        created: playlistRes.playlists.created,
+        modified: playlistRes.playlists.modified,
+        songsIds: playlistSongsRes.map(psr => psr.sid),
+      })
+    }
+    return response;
+  }
+
   async getPlaylists(req, res) {
     try {
-      var playlistsRes = await this.db
-        .select()
-        .from(users)
-        .where(eq(users.id, req.user.id))
-        .innerJoin(userPlaylists, eq(users.id, userPlaylists.uid))
-        .innerJoin(playlists, eq(userPlaylists.pid, playlists.id))
-      var response = [];
-      for (const playlistRes of playlistsRes) {
-        var playlistSongsRes = await this.db
-          .select()
-          .from(playlistSongs)
-          .where(eq(playlistSongs.pid, playlistRes.playlists.id));
-        response.push({
-          id: playlistRes.playlists.id,
-          name: playlistRes.playlists.name,
-          created: playlistRes.playlists.created,
-          modified: playlistRes.playlists.modified,
-          songsIds: playlistSongsRes.map(psr => psr.sid),
-        })
-      }
-      res.status(200).json(response);
+      res.status(200).json(await this.getPlaylistsFromUser(req.user));
     } catch(err) {
       console.error(err);
       res.status(500).send(err.toString());
@@ -234,6 +238,26 @@ export default class UM {
       name = name.substring(0, 128);
       await this.db.update(playlists).set({ name, modified: new Date() }).where(eq(playlists.id, pid));
       res.status(200).json({});
+    } catch(err) {
+      console.error(err);
+      res.status(500).send(err.toString());
+    }
+  }
+
+  async getUser(req, res) {
+    try {
+      if (!req.params.uname) return res.status(300).send("Field uname not specified");
+      
+      const existing = await this.db.select()
+        .from(users)
+        .where(eq(users.name, req.params.uname));
+      
+      if (existing.length == 0) return res.status(300).send("This user does not exist");
+
+      res.status(200).json({
+        user: existing[0],
+        playlists: await this.getPlaylistsFromUser(existing[0])
+      });
     } catch(err) {
       console.error(err);
       res.status(500).send(err.toString());

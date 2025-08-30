@@ -3,7 +3,7 @@ import { useNavigate } from '@solidjs/router';
 
 import { NavBar } from '../components/navigation'
 import { u, uLogOut, uTryLog } from '../components/auth';
-import { LinkButton } from '../components/utils';
+import { Link, LinkButton, LinkIcon, mds, User } from '../components/utils';
 import { Layout } from '../components/layout';
 
 export default function App() {
@@ -25,14 +25,28 @@ export default function App() {
 
       <NavBar navigator={navigate} nobackbtn={true}/>
 
-      <Show when={u.name} fallback=<div><LinkButton href="/login">Log in</LinkButton> or <LinkButton href="/signup">sign up</LinkButton> to save your playlists.</div>>
-        <div>Logged in as <span class="font-bold font-mono">{u.name}</span>. View your playlists <LinkButton href="/profile" /> or <LinkButton onclick={uLogOut} text="log out" />.</div>
-      </Show>
+      <div class="text-xl">
+        <Show
+            when={u.connected}
+            fallback={<div class="flex gap-2"><LinkIcon href="login" type="right-to-bracket" text="log in"/> or <LinkIcon href="signup" type="paw" text="register"/> to save your playlists</div>}
+          >
+            <div class="flex flex-row gap-1">
+              <div>logged as <User user={{name: u.name}}/></div>
+              <div>{mds}</div>
+              <div class="font-bold flex flex-row gap-2">
+                {/* <LinkIcon href="settings" type="gear" text="settings"/>{mds} */}
+                <LinkIcon href="/" type="moon" text="disconnect" onClick={uLogOut}/>
+              </div>
+            </div>
+          </Show>
+      </div>
 
-      <p class="text-red-700 font-bold max-w-150">
+      <p class="text-red-700 font-bold max-w-150 text-base">
         This website is strictly restricted to its contributors.<br/>
         Users acknowledge that using this tool may be subject to third-party terms of service, including those of YouTube. By proceeding, users accept full responsibility for their actions and any resulting consequences.
       </p>
+
+      <p class="text-md">discover new music with <LinkButton href="https://last.fm" target="_blank" text="last.fm"/></p>
 
     </Layout>
   );

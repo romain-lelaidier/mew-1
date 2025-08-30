@@ -72,3 +72,19 @@ export const uTrySignup = async (username, password) => {
   await logFromRes(res);
   
 }
+
+export const uVerify = async (token) => {
+  const res = await post('/api/um/verify', { token });
+  if (!is2xx(res)) {
+    throw await res.text();
+  }
+  await logFromRes(res);
+}
+
+export const uSaveParams = async (params) => {
+  const res = await post('/api/um/changeparams', { params });
+  if (!is2xx(res)) {
+    throw await res.text();
+  }
+  setU("params", await res.json())
+}

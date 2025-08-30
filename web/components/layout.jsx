@@ -1,9 +1,9 @@
-import { A } from "@solidjs/router";
 import { BottomPlayer } from "../player/bottom";
 import { Match, Show, Switch } from "solid-js";
 import { PlaylistAdder } from "./playlists";
 import { player } from "../player/logic";
 import { u } from "./auth";
+import { Link } from "./utils";
 
 export function Layout(props) {
   return (
@@ -17,7 +17,7 @@ export function Layout(props) {
           </Match>
           <Match when={props.floating}>
             <div class="flex-grow flex flex-col items-center justify-center">
-              <div style={{'max-width': '100%'}} class="bg-d p-4 flex w-100 rounded-md drop-shadow-[0_0px_10px_rgba(0,0,0,0.15)]">
+              <div style={{'max-width': '100%'}} class="bg-d p-4 flex w-100 bg-white rounded-md drop-shadow-[0_0px_10px_rgba(0,0,0,0.15)]">
                 {props.children}
               </div>
             </div>
@@ -36,14 +36,13 @@ export function Layout(props) {
       </Show>
       <PlaylistAdder/>
       <footer class="footer sm:footer-horizontal bg-b text-d flex justify-center flex-wrap [&>*]:px-4 [&>*]:py-0.5">
-        <A href="/">Home</A>
+        <Link href="/">Home</Link>
         <Show when={u.connected}>
-          <A href="/profile">My profile</A>
+          <Link href={"/profile/" + u.name}>My profile</Link>
         </Show>
         <span>MIT License · 2025</span>
-        <A href="https://github.com/romain-lelaidier/mew-1" target="_blank">GitHub</A>
-        {/* <A href="/profile">My profile</A> */}
-        <A href="/legal">Legal</A>
+        <Link href="https://github.com/romain-lelaidier/mew-1" target="_blank">GitHub</Link>
+        <Link href="/legal">Legal</Link>
       </footer>
     </>
   )

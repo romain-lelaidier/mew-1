@@ -1,7 +1,6 @@
 import { For, createSignal } from "solid-js";
 import { u, setU, uTryLog, post } from "./auth";
-import { is2xx, LinkButton, timeAgo } from "./utils";
-import { A } from "@solidjs/router";
+import { is2xx, LinkButton, timeAgo, Link } from "./utils";
 import { Icon } from "./icons";
 import { Popper } from "./popper";
 import { Bar } from "./bar";
@@ -20,6 +19,21 @@ export const getPlaylists = async () => {
   if (!is2xx(res)) throw await res.text();
   const pls = await res.json();
   pls.map(setPlaylist)
+
+}
+
+export const getUser = async (uname) => {
+
+  const res = await fetch('/api/um/user/' + uname);
+  if (!is2xx(res)) throw await res.text();
+  const json = await res.json();
+  const pls = {};
+  for (const pl of json.playlists) pls[pl.id] = pl;
+  return {
+    user: json.user,
+    playlists: pls
+  }
+  // pls.map(setPlaylist)
 
 }
 
@@ -98,6 +112,11 @@ export const removePlaylist = async (pid) => {
 
 }
 
+function getArray(o) {
+  if (typeof(o) == 'string') return JSON.parse(o);
+  return o;
+}
+
 export function PlaylistsList(props) {
 
   function songString(length) {
@@ -116,12 +135,12 @@ export function PlaylistsList(props) {
       <div class="px-2 pb-1 rounded-md hover:bg-white/10">
         <div class="flex flex-row gap-2 items-center">
           <Show when={props.sid && props.sid()}>
-            <Icon type={JSON.parse(pl.songsIds).includes(props.sid()) ? 'square-check' : 'empty-square'} />
+            <Icon type={getArray(pl.songsIds).includes(props.sid()) ? 'square-check' : 'empty-square'} />
           </Show>
           <div class="flex-grow leading-[1.2] py-1">
             <div class="font-bold">{pl.name}</div>
             <div class="opacity-80">
-              <div>{songString(JSON.parse(pl.songsIds).length)}</div>
+              <div>{songString(getArray(pl.songsIds).length)}</div>
               <div class="italic">Edited {timeAgo(new Date(pl.modified))}</div>
               {/* <div>Last modified: {new Date(pl.modified).toLocaleString()}</div> */}
             </div>
@@ -140,8 +159,8 @@ export function PlaylistsList(props) {
   return (
     <>
       <For each={Object.entries(props.playlists).filter(p => p[1] != null).sort((a, b) => new Date(b[1].modified) - new Date(a[1].modified))}>{([pid, pl], i) => 
-        <Show when={props.onClick} fallback={<A href={"/playlist/" + pid}><PlaylistBlock pl={pl} pid={pid} /></A>}>
-          <div onClick={() => props.onClick(pid)}><PlaylistBlock pl={pl} pid={pid} /></div>
+        <Show when={props.onClick} fallback={<Link href={"/playlist/" + pid}><PlaylistBlock pl={pl} pid={pid} /></Link>}>
+          <div onClick={() => props.onClick(pid)} class="cursor-pointer"><PlaylistBlock pl={pl} pid={pid} /></div>
         </Show>
       }</For>
       <Popper trigger={editPid} setTrigger={setEditPid} title="Edit playlist name">
@@ -171,7 +190,7 @@ export function PlaylistAdder(props) {
 
   return (
     <Popper trigger={playlistSaveSid} setTrigger={setPlaylistSaveSid} title="Save to playlist">
-      <div>Manage your playlists <LinkButton href="/profile"/></div>
+      <div>Manage your playlists <span onClick={() => setPlaylistSaveSid(null)}><LinkButton href={"/profile/" + u.name}/></span></div>
       <div class="overflow-scroll flex-grow flex flex-col mt-1">
         <PlaylistsList playlists={u.playlists} onClick={adder} sid={playlistSaveSid} />
       </div>
