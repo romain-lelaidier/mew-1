@@ -170,7 +170,7 @@ app.post('/api/pl/add', authenticateJWT, (req, res) => um.addToPlaylist(req, res
 app.post('/api/pl/remove', authenticateJWT, (req, res) => um.removeFromPlaylist(req, res));
 app.post('/api/um/playlists', authenticateJWT, (req, res) => um.getPlaylists(req, res));
 
-const PORT = process.env.PORT_MEW_API || 3000;
+const PORT = process.env.PORT_API || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
