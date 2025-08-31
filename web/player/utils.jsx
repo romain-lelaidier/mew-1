@@ -28,7 +28,7 @@ export function PBarNoText(props) {
       {/* progress */}
       <div class="block h-1/5 bg-b rounded-full absolute top-2/5" style={{width: `${100 * player.audio.currentTime / player.audio.duration}%`}}></div>
       {/* slider */}
-      <input id="pslider" type="range" value={(player.audio.currentTime / player.audio.duration).toString()} min="0" max="1" step="0.0001" onInput={({ target }) => player.controls.seek((+target.value) * player.audio.duration) } class="absolute h-full" />
+      <input id="pslider" type="range" value={(player.audio.currentTime / player.audio.duration).toString()} min="0" max="1" step="0.0001" onInput={({ target }) => player.actions.seek((+target.value) * player.audio.duration) } class="absolute h-full" />
     </div>
   )
 }

@@ -10,7 +10,7 @@ export class Player {
     [ this.s, this.setS ] = createStore({
       started: false,
       get current() {
-        return this.queue[this.i]
+        return this.queue[this.i];
       },
       get next() {
         return this.queue[this.inext]
@@ -20,19 +20,52 @@ export class Player {
       },
     });
 
-    [ this.stream, this.setStream ] = createSignal(null);
     [ this.playing, this.setPlaying ] = createSignal(false);
-    [ this.audio, this.controls ] = createAudio(this.stream, this.playing);
+    this.audioDOM = document.createElement("audio");
+    this.audioDOM.autoplay = true;
+
+    [ this.audio, this.setAudio ] = createStore({
+      state: null,
+      currentTime: -1,
+      duration: -1
+    });
+
     [ this.requestAutoplay, this.setRequestAutoplay ] = createSignal(false);
 
     [ this.canSkip, this.setCanSkip ] = createSignal(true);
 
     this.actions = {
+      play: async () => {
+        try {
+          await this.audioDOM.play();
+        } catch(e) {
+          this.setAudio("state", "error");
+          const code = this.audioDOM.networkState;
+          console.log("audio error", e, code);
+          if (code != 3) {
+            this.setPlaying(false);
+            this.setRequestAutoplay(true);
+            var clicked = false;
+            window.addEventListener("click", () => {
+              if (!clicked) {
+                this.setRequestAutoplay(false);
+                this.setPlaying(true);
+                this.actions.play();            
+              }
+              clicked = true;
+            })
+            return;
+          }
+        }
+      },
       playPause: () => {
         this.setPlaying(playing => !playing);
+        if (this.playing()) this.actions.play();
+        else this.audioDOM.pause();
       },
       next: (right = true) => {
-        this.controls.pause();
+        this.audioDOM.pause();
+        this.setAudio("state", "loading");
         let delta = right ? 1 : -1;
         let newi = this.s.i + delta;
         if (newi < 0) return;
@@ -45,48 +78,40 @@ export class Player {
       },
       jump: i => {
         if (i < 0 || i >= this.s.queue.length) return;
-        this.controls.pause();
+        this.audioDOM.pause();
+        this.setAudio("state", "paused");
         this.setS("i", i);
         this.setS("inext", i + 1);
         this.prepare().then(() => {
           this.tryPlay()
         });
+      },
+      seek: time => {
+        this.audioDOM.currentTime = time;
       }
     }
 
-    createEffect(() => {
-      if (this.audio.state == 'complete' && this.canSkip()) {
-        this.setCanSkip(false);
-        this.setStream(null);
+    this.audioDOM.addEventListener("load", (function() {
+      this.setS("queue", this.s.i, "loaded", true);
+      this.actions.play();
+    }).bind(this));
+
+    this.audioDOM.addEventListener("play", (function() {
+      this.setAudio("state", "playing")
+    }).bind(this));
+
+    this.audioDOM.addEventListener("ended", (function() {
+      if (this.canSkip()) {
         this.actions.next();
       }
-      if (this.audio.state != 'complete') {
-        this.setCanSkip(true);
+    }).bind(this));
+
+    setInterval((() => {
+      if (this.audio.state != "loading") {
+        this.setAudio("currentTime", this.audioDOM.currentTime)
+        this.setAudio("duration", this.audioDOM.duration)
       }
-      if (this.audio.state == 'error') {
-        const code = this.audio.player.networkState;
-        if (code == 1 || code == 2) {
-          this.setPlaying(false);
-          this.setRequestAutoplay(true);
-          var clicked = false;
-          window.addEventListener("click", () => {
-            if (!clicked) {
-              this.setRequestAutoplay(false);
-              this.setPlaying(true);
-            }
-            clicked = true;
-          })
-          return;
-        }
-        console.log(this.s.i);
-        this.setS("queue", this.s.i, "error", code);
-        console.log('audio error: networkState = ' + code);
-      } else {
-        if (this.s.queue && this.s.current && this.s.current.error) {
-          this.setS("queue", this.s.i, "error", null);
-        }
-      }
-    })
+    }).bind(this), 100);
 
     window.addEventListener("keydown", e => {
       if (e.target == document.body || e.target.id == "pslider") {
@@ -103,7 +128,7 @@ export class Player {
   openSelf(navigate) {
     if (this.s.started) {
       var url = `/player/${this.s.info.id}`;
-      if (this.s.info.qid) url += '/' + this.s.info.qid;
+      if (this.s.info.qid) url += '?qid=' + this.s.info.qid;
       navigate(url)
     }
   }
@@ -135,7 +160,7 @@ export class Player {
       },
     });
 
-    this.setStream(null)
+    this.audioDOM.src = null;
     this.setPlaying(false);
     this.setCanSkip(true);
 
@@ -276,9 +301,11 @@ export class Player {
 
   tryPlay() {
     if (this.s.current) {
-      if (this.stream() != this.s.current.stream) {
-        this.setStream(this.s.current.stream.url);
+      if (this.audioDOM.src != this.s.current.stream.url) {
+        this.audioDOM.src = this.s.current.stream.url;
+        this.setAudio("state", "loading");
         this.setPlaying(true);
+        this.actions.play();
       }
     }
   }

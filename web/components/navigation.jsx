@@ -1,5 +1,6 @@
 import { createSignal, Show } from "solid-js";
 import { Icon } from "./icons";
+import { BackButton } from "./utils";
 
 function SearchBar(props) {
   const [query, setQuery] = createSignal(props.query || '');
@@ -55,7 +56,9 @@ export function NavBar(props) {
   return (
     <div class="relative flex flex-row gap-1 items-center">
       <Show when={!props.nobackbtn}>
-        <div class="flex items-center justify-center p-1" onclick={() => { if (typeof props.navigator === 'function') props.navigator(-1) }}><Icon type="angle-left"></Icon></div>
+        <div class="mx-1">
+          <BackButton><Icon type="chevron-down"/></BackButton>
+        </div>
       </Show>
       <SearchBar {...props} />
     </div>

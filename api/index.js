@@ -169,6 +169,7 @@ app.post('/api/pl/rename', authenticateJWT, (req, res) => um.renamePlaylist(req,
 app.post('/api/pl/add', authenticateJWT, (req, res) => um.addToPlaylist(req, res, ytm));
 app.post('/api/pl/remove', authenticateJWT, (req, res) => um.removeFromPlaylist(req, res));
 app.post('/api/um/playlists', authenticateJWT, (req, res) => um.getPlaylists(req, res));
+app.get('/api/um/user/:uname', (req, res) => um.getUser(req, res));
 
 const PORT = process.env.PORT_API || 3000;
 app.listen(PORT, () => {

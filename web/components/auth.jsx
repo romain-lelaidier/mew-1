@@ -1,6 +1,7 @@
 import { createEffect, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { is2xx } from "./utils";
+import { getPlaylists } from "./playlists";
 
 const [ token, setToken ] = createSignal(localStorage.getItem("token"));
 createEffect(() => {
@@ -41,6 +42,7 @@ async function logFromRes(res) {
     setToken(json.token);
     setU("name", json.name);
     setU("connected", true);
+    getPlaylists();
   } else {
     uLogOut();
     throw await res.text();

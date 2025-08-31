@@ -1,5 +1,6 @@
 import { A, useLocation, useNavigate } from "@solidjs/router";
 import { Icon } from "./icons";
+import { Show } from "solid-js";
 
 export const mds = " · ";
 
@@ -68,11 +69,15 @@ export function Link(props) {
   return <A state={{ previous: location.pathname }} {...props} />;
 }
 
-export function BackButton() {
+export function BackButton(props) {
   const navigate = useNavigate();
   const location = useLocation();
-  const backPath = () => (location.state?.previous ? -1 : '/');
-  return <button class="uppercase flex flex-row gap-1 items-center cursor-pointer text-base" onClick={() => navigate(backPath())}><Icon type="arrow-left" size={1}/><span class="pt-[0.8]">back</span></button>;
+  const backPath = () => (location.state?.previous || '/');
+  return <button class="uppercase flex flex-row gap-1 items-center cursor-pointer text-base" onClick={() => navigate(backPath())}>
+    <Show when={props.children} fallback={<><Icon type="arrow-left" size={1}/><span class="pt-[0.8]">back</span></>}>
+      {props.children}
+    </Show>
+  </button>;
 }
 
 export function LinkButton(props) {
