@@ -105,13 +105,13 @@ app.get('/api/search_suggestions/:query', async (req, res) => {
 })
 
 app.get('/api/search/:query', dmw, async (req, res) => {
-  const results = await navigators.lastfm.search(req.params.query);
+  const results = await navigators.youtube.search(req.params.query);
   log('search', req, { name: req.params.query });
   res.json(results);
 });
 
 app.get('/api/artist/:id', dmw, async (req, res) => {
-  const artist = await navigators.lastfm.artist(req.params.id);
+  const artist = await navigators.youtube.artist(req.params.id);
   res.json(artist);
 })
 
@@ -160,7 +160,6 @@ app.get('/api/colors', async (req, res) => {
 })
 
 // ----- um -----
-
 app.post('/api/um/signup', (req, res, next) => um.createUser(req, res, next), (req, res) => um.logUser(req, res));
 app.post('/api/um/login', (req, res) => um.logUser(req, res));
 
