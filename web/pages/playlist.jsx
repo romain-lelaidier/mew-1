@@ -2,7 +2,7 @@ import { useParams } from '@solidjs/router';
 import { MetaProvider, Title } from "@solidjs/meta";
 import { createResource, createSignal, For } from 'solid-js';
 import { AggregateSpans, mds } from '../components/results';
-import { BackButton, durationString, timeAgo, User, Link } from '../components/utils';
+import { BackButton, durationToString, timeAgo, User, Link } from '../components/utils';
 import { getPlaylist, removeFromPlaylist } from '../components/playlists';
 import { Icon } from '../components/icons';
 import { Popper } from '../components/popper';
@@ -51,7 +51,7 @@ export default function App() {
                   [song.album, "italic"]
                 ]} sep={mds} bf={<br/>} />
                 <AggregateSpans strs={[
-                  [durationString(song.duration)]
+                  [durationToString(song.duration)]
                 ]} sep={mds} bf={<br/>} />
               </div>
               <div class="mr-2 flex flex-row gap-1 items-center">

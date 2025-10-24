@@ -24,7 +24,7 @@ export default function App() {
     <Layout>
 
       <MetaProvider>
-        <Title>Mew - {artist()?.title || 'Loading...'}</Title>
+        <Title>Mew - {artist()?.name || 'Loading...'}</Title>
       </MetaProvider>
 
       <NavBar navigator={navigate} />

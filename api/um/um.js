@@ -173,7 +173,7 @@ export default class UM {
     }
   }
 
-  async addToPlaylist(req, res, ytm) {
+  async addToPlaylist(req, res, extractor) {
     try {
       if (!req.body.pid) return res.status(300).send("Field pid not specified");
       if (!req.body.sid) return res.status(300).send("Field sid not specified");
@@ -188,7 +188,7 @@ export default class UM {
       }
 
       const songsRes = await this.db.select().from(songs).where(eq(songs.id, sid));
-      if (songsRes.length == 0) ytm.getVideo({ id: sid });
+      if (songsRes.length == 0) extractor.getVideo({ id: sid });
       await this.db.insert(playlistSongs).values({ pid, sid });
       await this.db.update(playlists).set({ modified: new Date() }).where(eq(playlists.id, pid));
       return res.status(200).send();

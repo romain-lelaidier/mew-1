@@ -3,12 +3,14 @@ import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import { rateLimit } from 'express-rate-limit';
 import jsonwebtoken from "jsonwebtoken";
+import * as fs from "fs";
 
 import * as schema from "./db/schema.js";
-import * as utils from "./ytm/utils.js"
-import YTM from "./ytm/ytm.js";
+import * as utils from "./utils.js"
+import { YouTubeExtractor } from "./extractor/youtube.js"
+import { LastFmNavigator } from "./navigator/lastfm.js";
+import { YouTubeNavigator } from "./navigator/youtube.js";
 import UM from "./um/um.js";
-import * as fs from "fs";
 
 // ip getter
 const getip = (req) => req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -25,8 +27,19 @@ const pool = await mysql.createPool({
 
 const db = drizzle(pool, { schema, mode: "default" });
 
-// ----- youtube extractor -----
-var ytm = new YTM(db);
+// request wrapper
+const ww = new utils.WebWrapper();
+
+// ----- navigation and extraction -----
+var navigators = {
+  // lastfm: new YouTubeNavigator(ww),
+  lastfm: new LastFmNavigator(ww),
+  youtube: new YouTubeNavigator(ww)
+};
+
+var extractors = {
+  youtube: new YouTubeExtractor(ww, db)
+}
 
 // ----- users manager -----
 var um = new UM(db);
@@ -84,26 +97,31 @@ const limiter = rateLimit({
 
 // app.use(limiter);
 
-// ----- ytm -----
+// ----- API itself -----
 
 app.get('/api/search_suggestions/:query', async (req, res) => {
-  const results = await ytm.getSearchSuggestions(req.params.query);
+  const results = await navigators.youtube.searchSuggestions(req.params.query);
   res.json(results);
 })
 
 app.get('/api/search/:query', dmw, async (req, res) => {
-  const results = await ytm.getSearch(req.params.query);
+  const results = await navigators.lastfm.search(req.params.query);
   log('search', req, { name: req.params.query });
   res.json(results);
 });
 
 app.get('/api/artist/:id', dmw, async (req, res) => {
-  const artist = await ytm.getArtist(req.params.id);
+  const artist = await navigators.lastfm.artist(req.params.id);
   res.json(artist);
 })
 
 app.get('/api/album/:id', dmw, async (req, res) => {
-  const album = await ytm.getAlbum(req.params.id);
+  const album = await navigators.youtube.album(req.params.id);
+  res.json(album);
+})
+
+app.get('/api/album/:arid/:alid', dmw, async (req, res) => {
+  const album = await navigators.lastfm.album(req.params.arid + '/' + req.params.alid);
   res.json(album);
 })
 
@@ -113,14 +131,14 @@ app.get('/api/video/:id', dmw, async (req, res) => {
   if (params.queueId) obj.queueId = params.queueId;
   if (params.qid) obj.queueId = params.qid;
   if (params.wq) obj.withQueue = true;
-  const video = await ytm.getVideo(obj);
+  const video = await extractors.youtube.getVideo(obj);
   log('song', req, { vid: req.params.id, name: video.video.title, subname: video.video.artist });
   res.json(video);
 })
 
 app.get('/api/img', (req, res) => {
   var params = utils.parseQueryString(req._parsedUrl.query);
-  ytm.ww.get(
+  ww.get(
     "thumbnail", "png",
     params.url,
     { responseType: 'stream' }
@@ -137,7 +155,7 @@ app.get('/api/colors', async (req, res) => {
   var params = utils.parseQueryString(req._parsedUrl.query);
   if (!params.id) throw new Error("No id provided.");
   if (!params.url) throw new Error("No url provided.");
-  const palette = await ytm.getColors(params.id, params.url);
+  const palette = await extractors.youtube.getColors(params.id, params.url);
   res.json(palette);
 })
 
@@ -166,7 +184,7 @@ app.post('/api/pl/get', (req, res) => um.getPlaylist(req, res));
 app.post('/api/pl/create', authenticateJWT, (req, res) => um.createPlaylist(req, res));
 app.post('/api/pl/delete', authenticateJWT, (req, res) => um.removePlaylist(req, res));
 app.post('/api/pl/rename', authenticateJWT, (req, res) => um.renamePlaylist(req, res));
-app.post('/api/pl/add', authenticateJWT, (req, res) => um.addToPlaylist(req, res, ytm));
+app.post('/api/pl/add', authenticateJWT, (req, res) => um.addToPlaylist(req, res, extractors.youtube));
 app.post('/api/pl/remove', authenticateJWT, (req, res) => um.removeFromPlaylist(req, res));
 app.post('/api/um/playlists', authenticateJWT, (req, res) => um.getPlaylists(req, res));
 app.get('/api/um/user/:uname', (req, res) => um.getUser(req, res));

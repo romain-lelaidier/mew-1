@@ -15,7 +15,7 @@ export function BottomPlayer(props) {
             <Icon type="chevron-up" size={1.5}/>
           </div>
           <div class="bg-b/20 w-18 rounded-md">
-            <img class="rounded-md" onLoad={onImageLoad} onClick={() => player.openSelf(navigate)} src={window.location.origin + '/api/img?url=' + chooseThumbnailUrl(player.s.info.thumbnails || player.s.current.thumbnails)} />
+            <img class="rounded-md" onLoad={onImageLoad} onClick={() => player.openSelf(navigate)} src={window.location.origin + '/api/img?url=' + chooseThumbnailUrl(player.s.info.img || player.s.current.img)} />
           </div>
           <div class="flex flex-col leading-[1.2]">
             <PInfos bottom={true}/>

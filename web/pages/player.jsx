@@ -25,7 +25,7 @@ export default function App() {
     <Layout isplayer={true}>
 
       <MetaProvider>
-        <Title>Mew - {player.s.current ? player.s.current.title : 'Loading...'}</Title>
+        <Title>Mew - {player.s.current ? player.s.current.name : 'Loading...'}</Title>
       </MetaProvider>
 
       <Show when={player.requestAutoplay()}>
@@ -45,11 +45,11 @@ export default function App() {
             <div style="width: min(min(90vw, 90vh),20rem)" class="flex flex-col items-center justify-center gap-3">
               <Show when={player.s.info.artist}>
                 <div class="flex flex-col items-center leading-[1.2] mt-1">
-                  <span class="text-center">Playing <span class="font-bold">{player.s.info.title}</span> (album) by <A href={`/artist/${player.s.info.artistId}`} class="italic">{player.s.info.artist}</A></span>
+                  <span class="text-center">Playing <span class="font-bold">{player.s.info.name}</span> (album) by <A href={`/artist/${player.s.info.artistId}`} class="italic">{player.s.info.artist}</A></span>
                 </div>
               </Show>
               <div class="bg-b/20 w-full rounded-md">
-                <img class="rounded-md" onLoad={onImageLoad} src={window.location.origin + '/api/img?url=' + chooseThumbnailUrl(player.s.info.thumbnails || player.s.current.thumbnails)} />
+                <img class="rounded-md" onLoad={onImageLoad} src={window.location.origin + '/api/img?url=' + chooseThumbnailUrl(player.s.info.img || player.s.current.img)} />
               </div>
               <div class="flex flex-col items-center leading-[1.2] text-center">
                 <PInfos/>
@@ -64,11 +64,11 @@ export default function App() {
       </div>
 
       {/* Queue */}
-      <div style="min-width:50vw" class="bg-d flex flex-row flex-1 w-full justify-center ls:max-h-full ls:overflow-y-scroll">
-        <div class="flex flex-col gap-2 py-4 px-4 w-130 max-h-full overflow-y-scroll">
+      <div style="min-width:50vw" class="bg-d flex flex-row flex-1 w-full justify-center ls:max-h-full ls:overflow-hidden">
+        <div class="flex flex-col gap-2 py-4 px-4 w-130 max-h-full ls:overflow-hidden">
           <NavBar navigator={navigate} />
           <h3 class="text-xl font-bold">Queue</h3>
-          <div class="flex-grow max-h-full overflow-y-scroll">
+          <div class="flex-grow max-h-full overflow-hidden">
             <Show when={player.s.loaded} fallback="Loading queue...">
               <Show when={player.s.queue.length > 0} fallback="Queue is empty.">
                 <QueueResults queue={player.s.queue} i={player.s.i} onClick={i => player.actions.jump(i)} album={player.s.info.type != 'SONG'} />

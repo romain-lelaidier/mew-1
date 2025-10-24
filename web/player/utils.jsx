@@ -1,11 +1,10 @@
 import ColorThief from "colorthief";
 import { createSignal, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
-import { durationString, url } from "../components/utils";
+import { durationToString, url } from "../components/utils";
 import { player } from "./logic";
 import { u } from "../components/auth";
 import { Icon } from "../components/icons";
-import { PlaylistAdder } from "../components/playlists";
 
 const colorthief = new ColorThief()
 
@@ -39,8 +38,8 @@ export function PBar(props) {
       <Show when={player.audio.state != "loading"}>
         <Show when={player.s.current && !player.s.current.error} fallback={<div>Error playing audio (code {player.s.current.error})</div>}>
           <div class="w-full flex flex-row justify-between text-xs">
-            <span>{durationString(player.audio.currentTime)}</span>
-            <span>{durationString(player.audio.duration)}</span>
+            <span>{durationToString(player.audio.currentTime)}</span>
+            <span>{durationToString(player.audio.duration)}</span>
           </div>
           <div class="w-11/12 mt-[-0.2em]">
             <PBarNoText/>
@@ -54,11 +53,11 @@ export function PBar(props) {
 export function PInfos(props) {
   return (
     <>
-      <A onClick={() => player.start(player.s.current.id)} href={url(player.s.current)} class="font-bold">{player.s.current.title}</A>
-      <A onClick={() => player.start(player.s.current.albumId)} href={`/player/${player.s.current.albumId}`}>{player.s.current.album}</A>
+      <A onClick={() => player.start(player.s.current.id)} href={url(player.s.current)} class="font-bold">{player.s.current.name}</A>
+      <A onClick={() => player.start(player.s.current.album)} href={`/player/${player.s.current.album.id}`}>{player.s.current.album.name}</A>
       <Show when={player.s.current.artists}>
         <div class="flex flex-row">
-          <For each={JSON.parse(player.s.current.artists)}>{(artist, i) => 
+          <For each={player.s.current.artists}>{(artist, i) => 
             <>
               <Show when={i() > 0}><span class="mr-1">,</span></Show>
               <A href={`/artist/${artist.id}`} class="italic">{artist.name}</A>

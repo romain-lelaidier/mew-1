@@ -1,5 +1,5 @@
 import regescape from "regexp.escape";
-import * as utils from "./utils.js";
+import * as utils from "../utils.js";
 import { players } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
 

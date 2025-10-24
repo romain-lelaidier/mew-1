@@ -4,10 +4,18 @@ import { Show } from "solid-js";
 
 export const mds = " · ";
 
-export function chooseThumbnailUrl(thumbnails, width=Infinity) {
-  if (!thumbnails || thumbnails.length == 0) return;
-  if (typeof thumbnails == 'string') thumbnails = JSON.parse(thumbnails)
-  var sorted = thumbnails
+export function chooseThumbnailUrl(img, width=Infinity) {
+  if (typeof img == "object" && img.type == "lastfm") {
+    var w = width == Infinity ? 400 : Math.ceil(width / 20) * 20;
+    return `https://lastfm.freetls.fastly.net/i/u/${w}x${w}/${img.id}.jpg`
+  }
+  if (typeof img == "object" && img.type == "youtube") {
+    return chooseThumbnailUrl(img.thumbnails, width);
+  }
+  if (!img || img.length == 0) return;
+  if (typeof img == 'string') img = JSON.parse(img);
+  img = JSON.parse(JSON.stringify(img))
+  var sorted = img
     .sort((thb1, thb2) => thb2.width - thb1.width);
   var filtered = sorted.filter(thb => thb.width <= width)
   if (filtered.length > 0) return filtered[0].url;
@@ -56,11 +64,16 @@ export function viewCountString(viewCount) {
   return viewCount.toString()
 }
 
-export function durationString(duration) {
+export function durationToString(duration) {
   if (!duration) return null;
   duration = Math.floor(duration);
   const pad = (i, w, s) => (s.length < i) ? pad(i, w, w + s) : s;
   return Math.floor(duration / 60) + ':' + pad(2, '0', (duration%60).toString())
+}
+
+export function listenersToString(listeners) {
+  if (!listeners) return null;
+  return viewCountString(listeners);
 }
 
 

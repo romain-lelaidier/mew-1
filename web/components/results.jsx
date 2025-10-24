@@ -1,12 +1,13 @@
 import { A } from "@solidjs/router";
 import { For } from "solid-js";
-import { url, chooseThumbnailUrl, durationString, viewCountString } from "./utils.jsx"
+import { url, chooseThumbnailUrl, durationToString, viewCountString, Link, listenersToString } from "./utils.jsx"
+import { Icon } from "./icons.jsx";
 
 export const mds = ' · ';
 
 export function QueueResults(props) {
   return (
-    <div class="flex flex-col leading-[1.2] max-h-full overflow-y-scroll">
+    <div class="flex flex-col leading-[1.2] max-h-full overflow-y-hidden ls:overflow-y-scroll">
       <For each={props.queue}>{(result, j) =>
         <div onClick={() => props.onClick(j())} class="flex flex-row gap-1 hover:bg-white/10 p-1 rounded-sm items-center cursor-pointer">
           <Show when={props.i == j()}>
@@ -20,20 +21,20 @@ export function QueueResults(props) {
                 <span>{result.index}.</span>
               </div>
               <div class="flex flex-col justify-center">
-                <span class="font-bold">{result.title}</span>
-                <Show when={result.duration}><span>{durationString(result.duration)}</span></Show>
+                <span class="font-bold">{result.name}</span>
+                <Show when={result.duration}><span>{durationToString(result.duration)}</span></Show>
               </div>
             </div>
           >
-            <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 100)} />
+            <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.img || JSON.parse(result.imgjson), 100)} />
             <div>
-              <span class="font-bold">{result.title}</span>
+              <span class="font-bold">{result.name}</span>
               <AggregateSpans strs={[
-                [result.artists ? JSON.parse(result.artists).map(a => a.name).join(', ') : null],
-                [result.album, "italic"]
+                [result.artistsjson ? JSON.parse(result.artistsjson)?.map(a => a.name)?.join(', ') : null],
+                [result.albumjson ? JSON.parse(result.albumjson)?.name : null, "italic"]
               ]} sep={mds} bf={<br/>} />
               <AggregateSpans strs={[
-                [durationString(result.duration)]
+                [durationToString(result.duration)]
               ]} sep={mds} bf={<br/>} />
             </div>
           </Show>
@@ -78,11 +79,11 @@ export function SearchResultsArtist(props) {
   return (
     <>
       <div class="bg-b/10 flex flex-row flex-wrap overflow-hidden rounded-md mt-1">
-        <img src={chooseThumbnailUrl(artist.thumbnails)} class="max-h-28" />
+        <img src={chooseThumbnailUrl(artist.img, 200)} class="max-h-32" />
         <div class="p-2 flex flex-col gap-1 justify-center">
-          <div class="text-2xl">{artist.title}</div>
-          <Show when={artist.viewCount}>
-            <div>{viewCountString(artist.viewCount)} monthly listeners</div>
+          <div class="text-2xl">{artist.name}</div>
+          <Show when={artist.listeners}>
+            <div>{viewCountString(artist.listeners)} listeners</div>
           </Show>
           <Show when={artist.shufflePlayPID || artist.radioPlayPID}>
             <div class="flex flex-row flex-wrap gap-2 items-center">
@@ -104,13 +105,35 @@ export function SearchResultsArtist(props) {
               </Show>
             </div>
           </Show>
+          <Show when={artist.tags}>
+            <span class="flex flex-row italic">
+              {artist.tags.join(', ')}
+            </span>
+          </Show>
         </div>
       </div>
       <SearchResultsAll results={artist.results} />
-      <Show when={description}>
-        <For each={description.split('\n')}>{(p, i) =>
+      <Show when={artist.description}>
+        <For each={artist.description.split('\n')}>{(p, i) =>
           <p>{p}</p>
         }</For>
+      </Show>
+      <Show when={artist.similar}>
+        <div class="flex flex-col gap-1">
+          <h3 class="text-xl font-bold">Similar artists</h3>
+          <div class="flex flex-row gap-2 no-scrollbar leading-none overflow-scroll">
+            <For each={artist.similar}>{(result, j) =>
+              <Link href={url({ type: "ARTIST", ...result })} class="shrink-0 flex flex-col max-w-30 w-30 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+                <img loading="lazy" class="h-28 rounded-full" src={chooseThumbnailUrl(result.img, 160)} />
+                <div class="flex flex-col gap-1 items-center">
+                  <AggregateSpans strs={[
+                    [result.name, "font-bold text-center"]
+                  ]} sep={''} />
+                </div>
+              </Link>
+            }</For>
+          </div>
+        </div>
       </Show>
     </>
   )
@@ -157,15 +180,16 @@ export function SearchResultTop(props) {
   if (result.type == 'VIDEO' || result.type == 'SONG') {
     return (
       <A href={url(result)} class="flex flex-row gap-2 hover:bg-white/10 p-1 rounded-sm items-center leading-[1.2] text-lg">
-        <img loading="lazy" class="h-24 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 200)} />
+        <img loading="lazy" class="h-24 rounded-sm" src={chooseThumbnailUrl(result.img, 200)} />
         <div>
-          <span class="font-bold">{result.title}</span>
+          <span class="font-bold">{result.name}</span>
           <AggregateSpans strs={[
-            [result.artists ? result.artists.map(a => a.name).join(', ') : null],
-            [result.album, "italic"]
+            [result.artists ? result.artists.map(a => a.name).join(', ') : result.artist.name],
+            [result.album?.name, "italic"]
           ]} sep={mds} bf={<br/>} />
           <AggregateSpans strs={[
-            [durationString(result.duration)]
+            [durationToString(result.duration)],
+            [listenersToString(result.listeners)]
           ]} sep={mds} bf={<br/>} />
         </div>
       </A>
@@ -174,10 +198,10 @@ export function SearchResultTop(props) {
   if (result.type == 'ARTIST') {
     return (
       <A href={url(result)} class="shrink-0 flex flex-row gap-2 text-lg hover:bg-white/10 p-1 rounded-sm items-center">
-        <img loading="lazy" class="h-30 rounded-full" src={chooseThumbnailUrl(result.thumbnails, 160)} />
+        <img loading="lazy" class="h-30 rounded-full" src={chooseThumbnailUrl(result.img, 160)} />
         <div class="flex flex-col gap-1 items-center">
           <AggregateSpans strs={[
-            [result.title, "text-2xl"]
+            [result.name, "text-2xl"]
           ]} sep={''} />
         </div>
       </A>
@@ -190,22 +214,41 @@ function SearchResultGroup(props) {
   if (group.type == 'VIDEO' || group.type == 'SONG') {
     return (
       <div class="flex flex-col gap-1">
-        <h3 class="text-xl font-bold">Songs</h3>
+        <h3 class="text-xl font-bold">{props.title || "Tracks"}</h3>
         <div class="flex flex-col leading-[1.2]">
           <For each={group.results}>{(result, j) =>
-            <A href={url(result)} class="flex flex-row gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
-              <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 100)} />
+            <Link href={url(result)} class="flex flex-row gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+              <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.img, 100)} />
               <div>
-                <span class="font-bold">{result.title}</span>
+                <span class="font-bold">{result.name}</span>
+                <Show when={result.artists?.length > 0 || result.albums?.length > 0}>
+                  <br/>
+                  <For each={result.artists}>{(artist, i) =>
+                    <>
+                      <Show when={i() > 0}><span>, </span></Show>
+                      <Link href={"/artist/" + artist.id}>
+                        <Show when={i() == 0}><span style="display: inline-block; margin-bottom: -0.15em"><Icon type="user" size={1}/></span></Show>
+                        {artist.name}
+                      </Link>
+                    </>
+                  }</For>
+                  <Show when={result.artists?.length > 0 && result.albums?.length > 0}><span>{mds}</span></Show>
+                  <For each={result.albums}>{(album, i) =>
+                    <>
+                      <Show when={i() > 0}><span>, </span></Show>
+                      <Link href={"/album/" + album.id}>
+                        <Show when={i() == 0}><span style="display: inline-block; margin-bottom: -0.15em"><Icon type="record-vinyl" size={1}/></span></Show>
+                        <i>{album.name}</i>
+                      </Link>
+                    </>
+                  }</For>
+                </Show>
                 <AggregateSpans strs={[
-                  [result.artists ? result.artists.map(a => a.name).join(', ') : null],
-                  [result.album, "italic"]
-                ]} sep={mds} bf={<br/>} />
-                <AggregateSpans strs={[
-                  [durationString(result.duration)]
+                  [durationToString(result.duration)],
+                  [listenersToString(result.listeners)]
                 ]} sep={mds} bf={<br/>} />
               </div>
-            </A>
+            </Link>
           }</For>
         </div>
       </div>
@@ -215,19 +258,18 @@ function SearchResultGroup(props) {
   if (group.type == 'ALBUM') {
     return (
       <div class="flex flex-col gap-1">
-        <h3 class="text-xl font-bold">Albums</h3>
+        <h3 class="text-xl font-bold">{props.title || "Albums"}</h3>
         <div class="flex flex-row gap-2 no-scrollbar leading-none overflow-scroll">
           <For each={group.results}>{(result, j) =>
-            <A href={url(result)} class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
-              <img loading="lazy" class="h-40 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 160)} />
+            <Link href={url(result)} class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+              <img loading="lazy" class="h-40 rounded-sm" src={chooseThumbnailUrl(result.img, 160)} />
               <div class="flex flex-col gap-1 items-center">
                 <AggregateSpans strs={[
-                  [result.title, "font-bold text-center"],
-                  [result.artist],
-                  [result.year, "opacity-80"]
+                  [result.name, "font-bold text-center"],
+                  [result.artist?.name]
                 ]} sep={''} />
               </div>
-            </A>
+            </Link>
           }</For>
         </div>
       </div>
@@ -237,14 +279,14 @@ function SearchResultGroup(props) {
   if (group.type == 'ARTIST') {
     return (
       <div class="flex flex-col gap-1">
-        <h3 class="text-xl font-bold">Artists</h3>
+        <h3 class="text-xl font-bold">{props.title || "Artists"}</h3>
         <div class="flex flex-row gap-2 no-scrollbar leading-none overflow-scroll">
           <For each={group.results}>{(result, j) =>
-            <A href={url(result)} class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
-              <img loading="lazy" class="h-40 rounded-full" src={chooseThumbnailUrl(result.thumbnails, 160)} />
+            <A href={url(result)} class="shrink-0 flex flex-col max-w-42 w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
+              <img loading="lazy" class="h-40 rounded-full" src={chooseThumbnailUrl(result.img, 160)} />
               <div class="flex flex-col gap-1 items-center">
                 <AggregateSpans strs={[
-                  [result.title, "font-bold text-center"]
+                  [result.name, "font-bold text-center"]
                 ]} sep={''} />
               </div>
             </A>
@@ -261,10 +303,10 @@ function SearchResultGroup(props) {
         <div class="flex flex-row gap-2 no-scrollbar leading-none overflow-scroll">
           <For each={group.results}>{(result, j) =>
             <div class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
-              <img loading="lazy" class="h-40 rounded-sm" src={chooseThumbnailUrl(result.thumbnails, 160)} />
+              <img loading="lazy" class="h-40 rounded-sm" src={chooseThumbnailUrl(result.img, 160)} />
               <div class="flex flex-col gap-1 items-center">
                 <AggregateSpans strs={[
-                  [result.title, "font-bold text-center"],
+                  [result.name, "font-bold text-center"],
                   [result.artist],
                   [result.year, "opacity-80"]
                 ]} sep={''} />

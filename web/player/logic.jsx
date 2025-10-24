@@ -1,7 +1,17 @@
-import { createAudio } from "@solid-primitives/audio";
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { getPlaylist } from "../components/playlists";
+import { useLocation, useNavigate } from "@solidjs/router";
+
+function prepare(obj) {
+  if (!obj) return null;
+  return {
+    ...obj,
+    album: JSON.parse(obj.albumjson),
+    artists: obj.artistsjson ? JSON.parse(obj.artistsjson) : undefined,
+    img: obj.imgjson ? JSON.parse(obj.imgjson) : undefined
+  }
+}
 
 export class Player {
 
@@ -10,10 +20,10 @@ export class Player {
     [ this.s, this.setS ] = createStore({
       started: false,
       get current() {
-        return this.queue[this.i];
+        return prepare(this.queue[this.i]);
       },
       get next() {
-        return this.queue[this.inext]
+        return prepare(this.queue[this.inext]);
       },
       get url() {
         return this.queue[this.i]?.stream?.url
@@ -145,19 +155,9 @@ export class Player {
         qid: params.qid,
         type: { 11: 'SONG', 32: 'PLAYLIST' }[ id.length ] || 'ALBUM'
       },
-
       queue: [],
       i: -1,
-      inext: -1,
-      get current() {
-        return this.queue[this.i]
-      },
-      get next() {
-        return this.queue[this.inext]
-      },
-      get url() {
-        return this.queue[this.i]?.stream?.url
-      },
+      inext: -1
     });
 
     this.audioDOM.src = null;
@@ -179,20 +179,25 @@ export class Player {
           id: video.id,
           type: video.type,
           queueId: video.queueId,
-          title: video.title,
-          artists: JSON.stringify(video.artists),
-          album: video.album,
-          albumId: video.albumId,
-          thumbnails: JSON.stringify(video.thumbnails),
+          name: video.name,
+          artistsjson: JSON.stringify(video.artists),
+          albumjson: JSON.stringify(video.album),
+          imgjson: JSON.stringify(video.img),
           stream: video.stream,
           index: video.index,
-          duration: video.duration
+          duration: video.duration,
         }
       })
     ]);
   }
 
   async firstFetch() {
+
+    alert("YouTube has changed its API so Mew is currently broken. A fix will be available soon :)");
+    const navigate = useNavigate();
+    navigate('/');
+    return;
+
     if (this.s.info.type == 'SONG') {
       var url = `${window.location.origin}/api/video/${this.s.info.id}`;
       if (this.s.info.qid) url += '?qid=' + this.s.info.qid;
@@ -217,11 +222,9 @@ export class Player {
       this.setS("info", info => {
         return {
           ...info,
-          artists: JSON.stringify(result.artist),
-          artist: result.artist,
-          artistId: result.artistId,
-          thumbnails: JSON.stringify(result.thumbnails),
-          title: result.title
+          artistsjson: JSON.stringify(result.artist),
+          imgjson: JSON.stringify(result.img),
+          name: result.name
         }
       })
       this.setS("i", i => 0);
@@ -233,7 +236,7 @@ export class Player {
         return {
           ...info,
           user: playlist.user.name,
-          title: playlist.name
+          name: playlist.name
         }
       })
       this.setS("i", i => 0);
@@ -241,7 +244,7 @@ export class Player {
       this.appendToQueue(playlist.songs.map(s => {
         return {
           ...s,
-          thumbnails: [ { url: s.thumbnail, width: 60, height: 60 } ]
+          // img: [ { url: s.thumbnail, width: 60, height: 60 } ]
         }
       }));
     }
@@ -291,9 +294,9 @@ export class Player {
       console.log('prepare', i, url)
       const response = await fetch(url);
       const { video, queue } = await response.json();
-      this.setS("queue", i, "artists", JSON.stringify(video.artists))
+      this.setS("queue", i, "artistsjson", JSON.stringify(video.artists))
       this.setS("queue", i, "stream", video.stream);
-      this.setS("queue", i, "thumbnails", JSON.stringify(video.thumbnails));
+      this.setS("queue", i, "imgjson", JSON.stringify(video.img));
       this.appendToQueue(queue);
       this.prepare();
     }

@@ -2,7 +2,7 @@ import fs from "fs";
 
 import { YTMParser} from "./ytm_parser.js";
 import { YTMPlayer } from "./ytm_player.js";
-import * as utils from "./utils.js";
+import * as utils from "../utils.js";
 import { palettes, songs } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 
