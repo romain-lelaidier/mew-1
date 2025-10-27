@@ -55,7 +55,7 @@ export function PInfos(props) {
     <>
       <A onClick={() => player.start(player.s.current.id)} href={url(player.s.current)} class="font-bold">{player.s.current.name}</A>
       <Show when={player.s.current.albums}>
-        <div class="flex flex-row">
+        <div class="flex flex-row items-center">
           <For each={player.s.current.albums}>{(album, i) => 
             <>
               <Show when={i() == 0}><span style="display: inline-block; margin-bottom: -0.5em"><Icon type="record-vinyl" size={1}/></span></Show>

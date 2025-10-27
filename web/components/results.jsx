@@ -15,8 +15,24 @@ export function QueueResults(props) {
               <path d="M532 71C539.6 77.1 544 86.3 544 96L544 400C544 444.2 501 480 448 480C395 480 352 444.2 352 400C352 355.8 395 320 448 320C459.2 320 470 321.6 480 324.6L480 207.9L256 257.7L256 464C256 508.2 213 544 160 544C107 544 64 508.2 64 464C64 419.8 107 384 160 384C171.2 384 182 385.6 192 388.6L192 160C192 145 202.4 132 217.1 128.8L505.1 64.8C514.6 62.7 524.5 65 532.1 71.1z"/>
             </svg>
           </Show>
-          <Show when={result.albumsjson && JSON.parse(result.albumsjson).length > 0}
-            fallback=<div class="flex flex-row items-center">
+          <Show when={props.album}
+            fallback={
+              <>
+                <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.img || JSON.parse(result.imgjson), 100)} />
+                <div>
+                  <span class="font-bold">{result.name}</span>
+                  <AggregateSpans strs={[
+                    [result.artistsjson ? JSON.parse(result.artistsjson)?.map(a => a.name)?.join(', ') : null],
+                    [result.albumsjson ? JSON.parse(result.albumsjson).map(a => a.name)?.join(', ') : null, "italic"]
+                  ]} sep={mds} bf={<br/>} />
+                  <AggregateSpans strs={[
+                    [durationToString(result.duration)]
+                  ]} sep={mds} bf={<br/>} />
+                </div>
+              </>
+            }
+          >
+            <div class="flex flex-row items-center">
               <div class="w-8 h-8 flex justify-center items-center">
                 <span>{result.index}.</span>
               </div>
@@ -24,18 +40,6 @@ export function QueueResults(props) {
                 <span class="font-bold">{result.name}</span>
                 <Show when={result.duration}><span>{durationToString(result.duration)}</span></Show>
               </div>
-            </div>
-          >
-            <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.img || JSON.parse(result.imgjson), 100)} />
-            <div>
-              <span class="font-bold">{result.name}</span>
-              <AggregateSpans strs={[
-                [result.artistsjson ? JSON.parse(result.artistsjson)?.map(a => a.name)?.join(', ') : null],
-                [result.albumsjson ? JSON.parse(result.albumsjson).map(a => a.name)?.join(', ') : null, "italic"]
-              ]} sep={mds} bf={<br/>} />
-              <AggregateSpans strs={[
-                [durationToString(result.duration)]
-              ]} sep={mds} bf={<br/>} />
             </div>
           </Show>
         </div>
@@ -45,9 +49,15 @@ export function QueueResults(props) {
 }
 
 export function SearchResultsAll(props) {
+
+  if (props.results.length == 0) {
+    return <div>No results.</div>
+  }
+
   const songs = [];
   const others = [];
   const top = [];
+
   for (const result of props.results) {
     if (result.top == true) {
       top.push(result);
@@ -140,11 +150,7 @@ export function SearchResultsArtist(props) {
 }
 
 export function SearchResults(props) {
-  if (props.results.length == 0) return (
-    <div>
-      No results.
-    </div>
-  )
+  if (props.results.length == 0) return <></>;
 
   const sortedResults = [];
   var latestType = props.results[0].type;
@@ -183,14 +189,11 @@ export function SearchResultTop(props) {
         <img loading="lazy" class="h-24 rounded-sm" src={chooseThumbnailUrl(result.img, 200)} />
         <div>
           <span class="font-bold">{result.name}</span>
-          <AggregateSpans strs={[
-            [result.artists ? result.artists.map(a => a.name).join(', ') : result.artist.name],
-            [result.album?.name, "italic"]
-          ]} sep={mds} bf={<br/>} />
+          <AlbumsAndArtists song={result}/>
           <AggregateSpans strs={[
             [durationToString(result.duration)],
             [listenersToString(result.listeners)]
-          ]} sep={mds} bf={<br/>} />
+          ]} sep={mds} />
         </div>
       </A>
     )
@@ -221,32 +224,11 @@ function SearchResultGroup(props) {
               <img loading="lazy" class="h-16 rounded-sm" src={chooseThumbnailUrl(result.img, 100)} />
               <div>
                 <span class="font-bold">{result.name}</span>
-                <Show when={result.artists?.length > 0 || result.albums?.length > 0}>
-                  <br/>
-                  <For each={result.artists}>{(artist, i) =>
-                    <>
-                      <Show when={i() > 0}><span>, </span></Show>
-                      <Link href={"/artist/" + artist.id}>
-                        <Show when={i() == 0}><span style="display: inline-block; margin-bottom: -0.15em"><Icon type="user" size={1}/></span></Show>
-                        {artist.name}
-                      </Link>
-                    </>
-                  }</For>
-                  <Show when={result.artists?.length > 0 && result.albums?.length > 0}><span>{mds}</span></Show>
-                  <For each={result.albums}>{(album, i) =>
-                    <>
-                      <Show when={i() > 0}><span>, </span></Show>
-                      <Link href={"/album/" + album.id}>
-                        <Show when={i() == 0}><span style="display: inline-block; margin-bottom: -0.15em"><Icon type="record-vinyl" size={1}/></span></Show>
-                        <i>{album.name}</i>
-                      </Link>
-                    </>
-                  }</For>
-                </Show>
+                <AlbumsAndArtists song={result}/>
                 <AggregateSpans strs={[
                   [durationToString(result.duration)],
                   [listenersToString(result.listeners)]
-                ]} sep={mds} bf={<br/>} />
+                ]} sep={mds} />
               </div>
             </Link>
           }</For>
@@ -264,10 +246,8 @@ function SearchResultGroup(props) {
             <Link href={url(result)} class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
               <img loading="lazy" class="h-40 rounded-sm" src={chooseThumbnailUrl(result.img, 160)} />
               <div class="flex flex-col gap-1 items-center">
-                <AggregateSpans strs={[
-                  [result.name, "font-bold text-center"],
-                  [result.artist?.name]
-                ]} sep={''} />
+                <span class="font-bold text-center">{result.name}</span>
+                <AlbumsAndArtists song={result}/>
               </div>
             </Link>
           }</For>
@@ -305,11 +285,8 @@ function SearchResultGroup(props) {
             <div class="shrink-0 flex flex-col max-w-42 gap-1 hover:bg-white/10 p-1 rounded-sm items-center">
               <img loading="lazy" class="h-40 rounded-sm" src={chooseThumbnailUrl(result.img, 160)} />
               <div class="flex flex-col gap-1 items-center">
-                <AggregateSpans strs={[
-                  [result.name, "font-bold text-center"],
-                  [result.artist],
-                  [result.year, "opacity-80"]
-                ]} sep={''} />
+                <span class="font-bold text-center">{result.name}</span>
+                <AlbumsAndArtists song={result}/>
               </div>
             </div>
           }</For>
@@ -337,4 +314,38 @@ export function AggregateSpans(props) {
       }</For>
     </>
   )
+}
+
+export function AlbumsAndArtists(props) {
+  return <Show when={props.song.artists?.length > 0 || props.song.albums?.length > 0}>
+    <div class="flex flex-row gap-1">
+      <div class="flex flex-row">
+        <For each={props.song.artists}>{(artist, i) =>
+          <>
+            <Show when={i() > 0}><span class="mr-1">,</span></Show>
+            <Link href={"/artist/" + artist.id}>
+              <div class="flex flex-row items-center">
+                <Show when={i() == 0}><Icon type="user" size={1}/></Show>
+                <span>{artist.name}</span>
+              </div>
+            </Link>
+          </>
+        }</For>
+      </div>
+      <Show when={props.song.artists?.length > 0 && props.song.albums?.length > 0}><span>{mds}</span></Show>
+      <div class="flex flex-row">
+        <For each={props.song.albums}>{(album, i) =>
+          <>
+            <Show when={i() > 0}><span class="mr-1">,</span></Show>
+            <Link href={"/album/" + album.id}>
+              <div class="flex flex-row items-center">
+                <Show when={i() == 0}><Icon type="record-vinyl" size={1}/></Show>
+                <i>{album.name}</i>
+              </div>
+            </Link>
+          </>
+        }</For>
+      </div>
+    </div>
+  </Show>
 }

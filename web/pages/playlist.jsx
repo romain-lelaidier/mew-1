@@ -1,7 +1,7 @@
 import { useParams } from '@solidjs/router';
 import { MetaProvider, Title } from "@solidjs/meta";
 import { createResource, createSignal, For } from 'solid-js';
-import { AggregateSpans, mds } from '../components/results';
+import { AggregateSpans, AlbumsAndArtists, mds } from '../components/results';
 import { BackButton, durationToString, timeAgo, User, Link } from '../components/utils';
 import { getPlaylist, removeFromPlaylist } from '../components/playlists';
 import { Icon } from '../components/icons';
@@ -46,10 +46,7 @@ export default function App() {
               <img loading="lazy" class="h-16 rounded-sm" src={song.thumbnail} />
               <div class="flex-grow">
                 <span class="font-bold">{song.title}</span>
-                <AggregateSpans strs={[
-                  [song.artist],
-                  [song.album, "italic"]
-                ]} sep={mds} bf={<br/>} />
+                <AlbumsAndArtists song={song}/>
                 <AggregateSpans strs={[
                   [durationToString(song.duration)]
                 ]} sep={mds} bf={<br/>} />
