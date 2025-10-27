@@ -11,19 +11,13 @@ export class YouTubeParser {
         } [ ytType ];
         if (type) {
 
-          // musicResult[type] = {
-          //   name: run.text,
-          //   id: run.navigationEndpoint.browseEndpoint.browseId
-          // }
-
           const listname = type + 's';
           if (!musicResult[listname]) musicResult[listname] = [];
           musicResult[listname].push({
             name: run.text,
             id: run.navigationEndpoint.browseEndpoint.browseId
           });
-          // musicResult[type] = run.text;
-          // musicResult[type + "Id"] = run.navigationEndpoint.browseEndpoint.browseId
+
         }
       } else if ("watchEndpoint" in run.navigationEndpoint) {
         // AlbumSongResult
