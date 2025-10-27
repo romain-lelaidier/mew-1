@@ -54,13 +54,25 @@ export function PInfos(props) {
   return (
     <>
       <A onClick={() => player.start(player.s.current.id)} href={url(player.s.current)} class="font-bold">{player.s.current.name}</A>
-      <A onClick={() => player.start(player.s.current.album)} href={`/player/${player.s.current.album.id}`}>{player.s.current.album.name}</A>
+      <Show when={player.s.current.albums}>
+        <div class="flex flex-row">
+          <For each={player.s.current.albums}>{(album, i) => 
+            <>
+              <Show when={i() == 0}><span style="display: inline-block; margin-bottom: -0.5em"><Icon type="record-vinyl" size={1}/></span></Show>
+              <Show when={i() > 0}><span class="mr-1">,</span></Show>
+              <A onClick={() => player.start(album.id)} href={`/player/${album.id}`} class="italic">{album.name}</A>
+            </>
+          }
+          </For>
+        </div>
+      </Show>
       <Show when={player.s.current.artists}>
         <div class="flex flex-row">
           <For each={player.s.current.artists}>{(artist, i) => 
             <>
+              <Show when={i() == 0}><span style="display: inline-block; margin-bottom: -0.5em"><Icon type="user" size={1}/></span></Show>
               <Show when={i() > 0}><span class="mr-1">,</span></Show>
-              <A href={`/artist/${artist.id}`} class="italic">{artist.name}</A>
+              <A href={`/artist/${artist.id}`}>{artist.name}</A>
             </>
           }
           </For>
