@@ -43,9 +43,16 @@ export default function App() {
         <Show when={player.s.started && player.s.loaded && player.s.current}>
           <div class="p-2 bg-d rounded-md drop-shadow-[0_0px_10px_rgba(0,0,0,0.15)]">
             <div style="width: min(min(90vw, 90vh),20rem)" class="flex flex-col items-center justify-center gap-3">
-              <Show when={player.s.info.artist}>
+              <Show when={player.s.info.artistsjson}>
                 <div class="flex flex-col items-center leading-[1.2] mt-1">
-                  <span class="text-center">Playing <span class="font-bold">{player.s.info.name}</span> (album) by <A href={`/artist/${player.s.info.artistId}`} class="italic">{player.s.info.artist}</A></span>
+                  <span class="text-center">Playing <span class="font-bold">{player.s.info.name}</span> (album) by&nbsp;
+                    <For each={JSON.parse(player.s.info.artistsjson)}>{(artist, i) =>
+                      <>
+                        <Show when={i() > 0}><span class="mr-1">,</span></Show>
+                        <A href={`/artist/${artist.id}`} class="italic">{artist.name}</A>
+                      </>
+                    }</For>
+                  </span>
                 </div>
               </Show>
               <div class="bg-b/20 w-full rounded-md">
