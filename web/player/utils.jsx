@@ -54,18 +54,13 @@ export function PInfos(props) {
   return (
     <>
       <A onClick={() => player.start(player.s.current.id)} href={url(player.s.current)} class="font-bold">{player.s.current.name}</A>
-      {/* {player.s.current.albumsjson}
-      <For each={() => JSON.parse(player.s.current.albumsjson)}>{(album, i) =>
-        "a"
-        // <A onClick={() => player.start(album)} href={`/player/${album.id}`}>{album.name}</A>
-      }</For> */}
       <Show when={player.s.current.albums}>
         <div class="flex flex-row">
           <For each={player.s.current.albums}>{(album, i) => 
             <>
               <Show when={i() == 0}><span style="display: inline-block; margin-bottom: -0.5em"><Icon type="record-vinyl" size={1}/></span></Show>
               <Show when={i() > 0}><span class="mr-1">,</span></Show>
-              <A onClick={() => player.start(album)} href={`/player/${album.id}`} class="italic">{album.name}</A>
+              <A onClick={() => player.start(album.id)} href={`/player/${album.id}`} class="italic">{album.name}</A>
             </>
           }
           </For>
