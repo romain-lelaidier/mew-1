@@ -2,7 +2,6 @@ import { YouTubeParser} from "../navigator/youtube.js";
 import * as utils from "../utils.js";
 import { palettes, songs, players } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
-import * as fs from 'fs';
 
 class YouTubePlayer {
   constructor(pid, plg) {
@@ -238,7 +237,6 @@ export class YouTubeExtractor {
         )
       ])
       .then(([ytipr, ytins]) => {
-        fs.writeFileSync('ytipr.json', JSON.stringify(ytipr))
         var info = {
           id: ytipr.videoDetails.videoId,
           title: ytipr.videoDetails.title,
