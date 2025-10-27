@@ -2,7 +2,6 @@ import { YouTubeParser} from "../navigator/youtube.js";
 import * as utils from "../utils.js";
 import { palettes, songs, players } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
-import regescape from "regexp.escape";
 
 class YouTubePlayer {
   constructor(pid, plg) {
@@ -241,8 +240,11 @@ export class YouTubeExtractor {
         var info = {
           id: ytipr.videoDetails.videoId,
           title: ytipr.videoDetails.title,
-          artist: ytipr.videoDetails.author,
-          views: ytipr.videoDetails.viewCount,
+          artists: [{
+            name: ytipr.videoDetails.author,
+            id: ytipr.videoDetails.channelId
+          }],
+          views: parseInt(ytipr.videoDetails.viewCount),
           duration: parseInt(ytipr.videoDetails.lengthSeconds),
           thumbnails: ytipr.videoDetails.thumbnail.thumbnails,
           formats: ytipr.streamingData.formats.concat(ytipr.streamingData.adaptiveFormats)
@@ -272,10 +274,8 @@ export class YouTubeExtractor {
         .values({
           id: song.id,
           title: song.title.substring(0, 128),
-          artist: song.artist.substring(0, 128),
-          album: song.album.substring(0, 128),
-          artistId: song.artistId,
-          albumId: song.albumId,
+          artist: song.artists.map(artist => artist.name).join(', ').substring(0, 128),
+          album: song.albums.map(album => album.name).join(', ').substring(0, 128),
           thumbnail: utils.chooseThumbnailUrl(song.thumbnails, 0)
         })
     } catch(err) {
