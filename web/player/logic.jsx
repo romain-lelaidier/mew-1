@@ -7,8 +7,8 @@ function prepare(obj) {
   if (!obj) return null;
   return {
     ...obj,
-    album: JSON.parse(obj.albumjson),
-    artists: obj.artistsjson ? JSON.parse(obj.artistsjson) : undefined,
+    albums: obj.albumsjson ? JSON.parse(obj.albumsjson) : [],
+    artists: obj.artistsjson ? JSON.parse(obj.artistsjson) : [],
     img: obj.imgjson ? JSON.parse(obj.imgjson) : undefined
   }
 }
@@ -181,7 +181,7 @@ export class Player {
           queueId: video.queueId,
           name: video.name,
           artistsjson: JSON.stringify(video.artists),
-          albumjson: JSON.stringify(video.album),
+          albumsjson: JSON.stringify(video.albums),
           imgjson: JSON.stringify(video.img),
           stream: video.stream,
           index: video.index,
@@ -193,10 +193,10 @@ export class Player {
 
   async firstFetch() {
 
-    alert("YouTube has changed its API so Mew is currently broken. A fix will be available soon :)");
-    const navigate = useNavigate();
-    navigate('/');
-    return;
+    // alert("YouTube has changed its API so Mew is currently broken. A fix will be available soon :)");
+    // const navigate = useNavigate();
+    // navigate('/');
+    // return;
 
     if (this.s.info.type == 'SONG') {
       var url = `${window.location.origin}/api/video/${this.s.info.id}`;
