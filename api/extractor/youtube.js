@@ -234,7 +234,7 @@ export class YouTubeExtractor {
             "videoId": id,
             context: this.baseContext
           },
-          { headers: this.baseHeaders, save:true }
+          { headers: this.baseHeaders }
         )
       ])
       .then(([ytipr, ytins]) => {
