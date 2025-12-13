@@ -134,7 +134,7 @@ export class YouTubeExtractor {
           headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0" }
         },
       );
-      var playerMatch = html.match(/\/s\/player\/([a-z0-9]{8})\/player_ias\.vflset\/([a-z]{2}_[A-Z]{2})\/base\.js/);
+      var playerMatch = html.match(/\/s\/player\/([a-z0-9]{8})\/player_.{3}\.vflset\/([a-z]{2}_[A-Z]{2})\/base\.js/);
       if (!playerMatch) return reject("Error downloading player: player URL not found in html");
 
       var player = new YouTubePlayer(playerMatch[1], playerMatch[2]);
